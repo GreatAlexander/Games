@@ -19,6 +19,37 @@ if not pygame.mixer: print('Warning, sound disabled')
 	#  Set Main and Resource directories
 main_dir = os.path.split(os.path.abspath(__file__))[0]
 data_dir = os.path.join(main_dir, 'Resources')
+#==============================================================================
+
+#==============================================================================
+	#  Image / Sound Resource Loader Functions
+def load_image(name, colorkey=None):
+	fullname = os.path.join(data_dir, name)
+	try:
+		image = pygame.image.load(fullname)
+	except pygame.error:
+		print (('Cannot load image:', fullname))
+		raise SystemExit(str(geterror()))
+	#image = image.convert()
+	if colorkey is not None:
+		if colorkey is -1:
+			colorkey = image.get_at((0,0))
+		image.set_colorkey(colorkey, RLEACCEL)
+	return image, image.get_rect()
+
+def load_sound(name):
+	class NoneSound:
+		def play(self): pass
+	if not pygame.mixer or not pygame.mixer.get_init():
+		return NoneSound()
+	fullname = os.path.join(data_dir, name)
+	try:
+		sound = pygame.mixer.Sound(fullname)
+	except pygame.error:
+		print (('Cannot load sound: %s' % fullname))
+		raise SystemExit(str(geterror()))
+	return sound
+#==============================================================================
 
 #==============================================================================
 	# Constant Values
@@ -60,36 +91,6 @@ ORANGE = (255, 140, 0)
 Frict = 0.99
 CFrict = 0.55			# Collision Friction
 Margin = 1
-
-
-#==============================================================================
-	#  Image / Sound Resource Loader Functions
-def load_image(name, colorkey=None):
-	fullname = os.path.join(data_dir, name)
-	try:
-		image = pygame.image.load(fullname)
-	except pygame.error:
-		print (('Cannot load image:', fullname))
-		raise SystemExit(str(geterror()))
-	#image = image.convert()
-	if colorkey is not None:
-		if colorkey is -1:
-			colorkey = image.get_at((0,0))
-		image.set_colorkey(colorkey, RLEACCEL)
-	return image, image.get_rect()
-
-def load_sound(name):
-	class NoneSound:
-		def play(self): pass
-	if not pygame.mixer or not pygame.mixer.get_init():
-		return NoneSound()
-	fullname = os.path.join(data_dir, name)
-	try:
-		sound = pygame.mixer.Sound(fullname)
-	except pygame.error:
-		print (('Cannot load sound: %s' % fullname))
-		raise SystemExit(str(geterror()))
-	return sound
 #==============================================================================
 
 	#TODO Implement Character Object properties
@@ -116,6 +117,7 @@ class Ball(pygame.sprite.Sprite):
 		self.rect.topleft = (posx, posy)
 		self.speed = 0
 		self.orientation = 0
+		self.cnt = 0
 		#self.touching = 0
 
 	
@@ -136,14 +138,41 @@ class Ball(pygame.sprite.Sprite):
 			self._push(pushspeed, pushorient)
 
 		self._newpos()
+		
+#	def calcangle(oldpos, newpos):
+#		"Calculate angle from 2 x,y cordinates"
+#		xneg = 0
+#		yneg = 0
+#		xdif = oldpos[0] - newpos [0]		
+#		ydif = oldpos[1] - newpos[1]
+#		
+#		if xdif < 0:
+#			xneg = 1
+#			xdif = abs(xdif)
+#		if ydif < 0:
+#			yneg = 1
+#			ydif = abs(ydif)
+		
+		
+		
 			
 	def _newpos(self):
 		"Update speed of ball"
 		currpos = np.matrix(self.rect.center)
-		
+		mean = 0
+		dev = 1
+		if self.cnt >= 15  and self.speed != 0:
+			rand = np.random.normal(mean, dev)
+			self.cnt = 0
+		else:
+			rand = 0
+		self.cnt = self.cnt + 1
+		self.orientation = self.orientation + rand
 		#xy = [1, -1]
-		if self.orientation >= 360 or self.orientation <= 0:
-			self.orientation = 0
+		if self.orientation <= 0:
+			self.orientation = 359
+		elif self.orientation >= 360:
+			self.orientation = 1
 		if self.orientation >= 0 and self.orientation < 90:
 			angle = self.orientation
 			xy = [1, -1]
@@ -171,6 +200,7 @@ class Ball(pygame.sprite.Sprite):
 #		xmod = self.speed * np.sin(np.deg2rad(angle))
 #		ymod = self.speed * np.cos(np.deg2rad(angle))
 		xymod = np.matrix((xmod*xy[0], ymod*xy[1]))
+		#self.nextpos = currpos + xymod + 
 		self.nextpos = currpos + xymod
 		
 		if self.nextpos[0, 0] < self.pitch.left or \
@@ -204,7 +234,7 @@ class Ball(pygame.sprite.Sprite):
 		self.rect.center = move[0]
 		
 		self.speed = self.speed * Frict
-		if self.speed <= 1:
+		if self.speed <= 0.8:
 			self.speed = 0
 		
 	def _move(self, dirxy):
@@ -439,7 +469,7 @@ def main():
 
 	# Other variables
 
-	#frame = 0				# Current Frame
+	frame = 0				# Current Frame
 	#gembound = 30			# Collision boundary around gems
 	#catboundx = 60			# Collision boundary around catx
 	##catboundy = 35			# Collision boundary around caty
@@ -447,15 +477,15 @@ def main():
 
 	#self.loop()
 
-	#def fpsshow(name, y, fr=None):
-		#''' Show current frame on screen '''
-		#myfont = pygame.font.SysFont("monospace", 15)
-		#if fr != None:
-			#text = myfont.render(name + ':' + str(fr), 1, (255, 255, 0))
-			#self.surface.blit(text, (10, y * 15 - 5))
-		#else:
-			#text = myfont.render(name, 1, (255, 255, 0))
-			#self.surface.blit(text, (10, y * 15 - 5))
+	def fpsshow(name, x, fr=None):
+		''' Show current frame on screen '''
+		myfont = pygame.font.SysFont("monospace", 15)
+		if fr != None:
+			text = myfont.render(name + ':' + str(fr), 1, (255, 255, 0))
+			screen.blit(text, (x * 15, Pitch[1] - Wallwidth + 10))
+		else:
+			text = myfont.render(name, 1, (255, 255, 0))
+			screen.blit(text, (x * 15, Pitch[1] - Wallwidth + 10))
 
 	#def game_exit(self):
 		#exit()
@@ -568,23 +598,7 @@ def main():
 
 		## FPS & Other UPDATE
 
-		#frame += 1
-		#fpsshow('Frame', 1, frame)
-		#fpsshow('Boy', 2, boyc)
-		#fpsshow('Cat', 3, catc)
-		#fpsshow('Catmoves', 4, catmoves)
-		#fpsshow('Cstep', 5, cstep)
-		#fpsshow('Gems', 6, gemobt)
-		#fpsshow('Gem4', 7, gemc[0])
-		#if dead:
-			#fpsshow('You are DEAD!', 8)
-		#else:
-			#fpsshow('Still Alive', 8)
 
-		#fpsshow('Dead', 8, dead)
-
-		#if frame == 30:
-			#frame = 0
 
 		# Update movement ticker
 		#if boymoves > 0:
@@ -609,8 +623,8 @@ def main():
 		#rocksprite.update()
 		if once == 1:
 			once = 0
-			pushspeed = 18
-			pushorient = 65		
+			pushspeed = np.random.randint(10, 26)
+			pushorient = np.random.randint(0, 360)	
 
 		ballsprite.update(dirxy, pushspeed, pushorient, bnc, mv, psh)
 		
@@ -622,7 +636,16 @@ def main():
 		ballsprite.draw(screen)
 		#rocksprite.draw(screen)
 		#herosprite.draw(screen)
+		
+		frame += 1
+		fpsshow('Frame', 5, "%02d" % frame)
+		fpsshow('Pos', 15, ball.rect.center)
+		fpsshow('Speed', 25, np.around(ball.speed, 3))
+		fpsshow('Theta', 35, np.around(ball.orientation, 2))
 
+		if frame == 30:
+			frame = 0		
+		
 		pygame.display.flip()
 		
 		if pygame.event.peek (QUIT):
@@ -631,5 +654,10 @@ def main():
 	pygame.quit()
 	sys.exit()
 
+#==============================================================================
+	# Run if called
+
 if __name__ == '__main__':
 	main()
+	
+#==============================================================================
