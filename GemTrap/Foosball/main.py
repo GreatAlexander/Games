@@ -89,7 +89,7 @@ YELLOW = (255, 255, 0)
 BLUE = (0, 0, 255)
 ORANGE = (255, 140, 0)
 Frict = 0.99
-CFrict = 0.55			# Collision Friction
+CFrict = 0.75			# Collision Friction
 Margin = 1
 #==============================================================================
 
