@@ -3,8 +3,9 @@
 #==============================================================================
 # NavigationExp1 - by Alejandro Bordallo
 # Details: First navigation experiment
-# TODO: Fix bug where next node will be first (lefttop) even when goal is present
-# TODO: Implement A* if really necessary
+# TODO: (EASY) Add distance to closest obstacle
+# TODO: (EASY) Implement checkable box
+# TODO: (HARD) Implement A* when box is checked
 #==============================================================================
 
 
@@ -180,6 +181,7 @@ def findPotpath(start, goal, potmap, rnd = 0):
 	
 	fail = 0
 	attempts = 100
+	patt = 0
 	for n in range(0, attempts):
 		path = np.array((start))
 		currnode=start
@@ -187,6 +189,8 @@ def findPotpath(start, goal, potmap, rnd = 0):
 		fail = 0
 		ln = 0
 		maxln = 20
+		mintol = 0	# Add tolerance to avoid local minima, but increases path length and randomness
+		
 		while np.array_equal(path[-1], goal) == False:
 			nnodes = np.empty(shape=(8,3))
 			nnodes[:] = np.NAN
@@ -203,7 +207,9 @@ def findPotpath(start, goal, potmap, rnd = 0):
 			
 			
 			mincost = np.nanmin(nnodes, 0)[2]
-			minnodes = np.where(nnodes == mincost)	
+			minnodes = np.where(nnodes[:,2] <= mincost + mintol)
+			#print nnodes
+			#print minnodes
 			
 			if nnodes.size == np.isnan(nnodes).sum():
 				fail = fail + 1
@@ -213,7 +219,7 @@ def findPotpath(start, goal, potmap, rnd = 0):
 			if rnd == 0:
 				nextind = np.nanargmin(nnodes, 0)[2]
 			else:
-				minnodes = np.where(nnodes == mincost)
+				#minnodes = np.where(nnodes[:,2] == mincost)
 				r = np.random.randint(0, len(minnodes[0]))
 				nextind = minnodes[0][r]
 	
@@ -222,7 +228,8 @@ def findPotpath(start, goal, potmap, rnd = 0):
 			currnode = nextpt
 			
 			if ln >= maxln:
-				print "Maximum length of path reached!"				
+				patt = patt + 1
+				#print "Reached path maximum length!"
 				break
 			else:
 				ln = ln + 1
@@ -234,8 +241,9 @@ def findPotpath(start, goal, potmap, rnd = 0):
 		
 	if n >= attempts-1:
 		print "Too many failed attempts at randomly finding path!"
-		print path
-		
+		#print path
+	
+	#print path
 	return path
 	
 #==============================================================================
@@ -401,15 +409,16 @@ def main():
 	
 	mouseenable = 1
 	pressed = 0
-	clicktol = 30	
+	clicktol = 30
+	relocate = 1
 	
 	pathind = 1
 	cnt = 0
 	arrived = 0
 	youbot.setstartxy(StartTile)
 	goalsprite.setstartxy(GoalTile)
-	block0.setstartxy(CentreTiles[transtonum(blockxy[0])])
-	block1.setstartxy(CentreTiles[transtonum(blockxy[1])])
+	block0.setstartxy(Block0Tile)
+	block1.setstartxy(Block1Tile)
 	
 	tstart = time.clock()
 	tstop = time.clock()
@@ -429,20 +438,38 @@ def main():
 		Goalsprite.draw(screen)
 		YouBotsprite.draw(screen)
 		
+		travtime = np.round(tstop - tstart, 2)
+		if travtime < 0.1:
+			travtime = 0
 		# Side panel printing commands
 		Panelprint(screen, "Frame:%02d" % cnt, 0)
-		Panelprint(screen, "Travel time", 1, np.round(tstop - tstart, 2))
+		Panelprint(screen, "Travel time", 1, travtime)
+		#TODO: Fix travel time when relocating
 		Panelprint(screen, "YouBot Position", 2, youbot.rect.center)
 		Panelprint(screen, "Distance to Goal", 3, np.round(np.sqrt(abs(youbot.rect.center[0]-GoalTile[0])+abs(youbot.rect.center[1]-GoalTile[1])), 2))
-		Panelprint(screen, "Step Number", 4, pathind-1)
+		Panelprint(screen, "Step Number", 4, pathind)
 		if arrived:
 			Panelprint(screen, "YouBot has arrived!", 5)
-		else:
+		elif np.array_equal(start, goal) == False:
 			tstop = time.clock()
 		Panelprint(screen, "Cursor Position", 6, pygame.mouse.get_pos())
 		Panelprint(screen, "Goal Position", 7, goalsprite.rect.center)
 		Panelprint(screen, "Block0 Position", 8, block0.rect.center)
 		Panelprint(screen, "Block1 Position", 9, block1.rect.center)
+		Panelprint(screen, "Start Position", 11, start)
+		if pressed:
+			if picked == 0:
+				Panelprint(screen, "Relocating Block0", 10)
+			elif picked == 1:
+				Panelprint(screen, "Relocating Block1", 10)
+			elif picked == 2:
+				Panelprint(screen, "Relocating YouBot", 10)
+			elif picked == 3:
+				Panelprint(screen, "Relocating Goal", 10)
+		Panelprint(screen, "Bottom", 29)
+		if np.array_equal(potpath[-1], goal) == False and np.array_equal(CentreTiles[transtonum(potpath[-1])], youbot.rect.center):
+			Panelprint(screen, "Youbot stuck at Local Minima!", 12)
+			
 			
 		pygame.display.flip()
 		
@@ -487,42 +514,54 @@ def main():
 			elif event.type == pygame.MOUSEBUTTONUP and event.button == LEFT:
 				# "Unclicked"
 				pressed = 0
+				arrived = 0
+				#start = transtoxy(youbot.xytarg)
+				if picked != 2 and relocate == 1:
+					start = potpath[pathind-1]
 				potmap = PotField((NumTiles[1],NumTiles[0]), start, goal, blockxy)		
 				potpath = findPotpath(start, goal, potmap, 1)
 				Printontiles(printnum, printxy, printpot, potmap, background, tilefont)
 				Backprint(background, EnvSize, TileSize, SidePanel)
 				pathind = 0
 				arrived = 0
-				
+				#relocate = 1
+#				youdiff = abs(np.subtract(CentreTiles, youbot.rect.center))
+#				younum = np.argmin(youdiff[:,0]+youdiff[:,1])
+#				start = potpath[pathind]
+
+			
+		if np.array_equal(youbot.rect.center, CentreTiles[transtonum(start)]):
+			if np.array_equal(start, goal) == False:
+				tstart = time.clock()
+			if relocate == 1:	
+				youbot.setstartxy(CentreTiles[transtonum(start)])
+				#relocate = 0
+			
 		if pressed == 1:
-			if picked == 0:
+			if picked == 0:	# "Chosen Block0"
 				tilediff = abs(np.subtract(CentreTiles, pygame.mouse.get_pos()))
 				num = np.argmin(tilediff[:,0]+tilediff[:,1])
 				block0.setstartxy(CentreTiles[num])
 				blockxy[0] = transtoxy(num)
-				# "Chosen Block0"
-				Panelprint(screen, "Relocating Block0", 10, block1.rect.center)
-			elif picked == 1:
+				
+			elif picked == 1:	# "Chosen Block1"
 				tilediff = abs(np.subtract(CentreTiles, pygame.mouse.get_pos()))
 				num = np.argmin(tilediff[:,0]+tilediff[:,1])				
 				block1.setstartxy(CentreTiles[np.argmin(tilediff[:,0]+tilediff[:,1])])				
 				blockxy[1] = transtoxy(num)
-				# "Chosen Block1"
-				Panelprint(screen, "Relocating Block1", 10, block1.rect.center)
-			elif picked == 2:
+				
+			elif picked == 2:	# "Chosen YouBot"
 				tilediff = abs(np.subtract(CentreTiles, pygame.mouse.get_pos()))
 				num = np.argmin(tilediff[:,0]+tilediff[:,1])
 				youbot.setstartxy(CentreTiles[np.argmin(tilediff[:,0]+tilediff[:,1])])
 				start = transtoxy(num)
-				# "Chosen YouBot"
-				Panelprint(screen, "Relocating YouBot", 10, block1.rect.center)
-			elif picked == 3:
+				
+			elif picked == 3:	# "Chosen Goal"
 				tilediff = abs(np.subtract(CentreTiles, pygame.mouse.get_pos()))
 				num = np.argmin(tilediff[:,0]+tilediff[:,1])
 				goalsprite.setstartxy(CentreTiles[np.argmin(tilediff[:,0]+tilediff[:,1])])
 				goal = transtoxy(num)
-				# "Chosen Goal"
-				Panelprint(screen, "Relocating Goal", 10, block1.rect.center)
+				
 
 	print "Exiting..."
 	pygame.quit()
