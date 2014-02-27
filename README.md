@@ -1,5 +1,5 @@
 Games
 =====
 
-PyGame Simulation Development
+Awesome PyGame Simulation Development
 
