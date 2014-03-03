@@ -1,3 +1,5 @@
+#!/usr/bin/python-2.7
+
 # -*- coding: utf-8 -*-
 
 #==============================================================================
@@ -5,6 +7,7 @@
 # Details: First navigation experiment
 # TODO: (EASY) Add distance to closest obstacle
 # TODO: (EASY) Implement checkable box
+# TODO: (MEDIUM) Store all found paths and choose the shortest successful path
 # TODO: (HARD) Implement A* when box is checked
 #==============================================================================
 
@@ -152,7 +155,7 @@ def PotField(mapsize, start, goal, blocks=None):
 	sval = 0
 	gval = -1 * max(mapsize[0],mapsize[1])
 	blocktol = 1
-	blockcost = 6
+	blockcost = 3
 	goalbonus = 5
 	#self.Map(start) = 0
 	#self.Map(goal) = -1 * mapsize[0]	
@@ -182,13 +185,14 @@ def findPotpath(start, goal, potmap, rnd = 0):
 	fail = 0
 	attempts = 100
 	patt = 0
+	temppath = np.array((start))
 	for n in range(0, attempts):
 		path = np.array((start))
 		currnode=start
 		mapsize = potmap.shape
 		fail = 0
 		ln = 0
-		maxln = 20
+		maxln = 15
 		mintol = 0	# Add tolerance to avoid local minima, but increases path length and randomness
 		
 		while np.array_equal(path[-1], goal) == False:
@@ -199,7 +203,7 @@ def findPotpath(start, goal, potmap, rnd = 0):
 				if currnode[1] + y < 0 or currnode[1] + y >= mapsize[0]:
 					continue
 				for x in range(-1, 2):
-					if currnode[0] + x < 0 or currnode[0] + x >= mapsize[1]:
+					if currnode[0] + x < 0 or currnode[0] + x >= mapsize[1] or (y == 0 and x == 0):
 						continue
 					if potmap[currnode[1] + y, currnode[0] + x] <= potmap[currnode[1], currnode[0]]:
 						nnodes[i] = [currnode[0] + x, currnode[1] + y, potmap[currnode[1] + y,currnode[0] + x]]
@@ -235,16 +239,25 @@ def findPotpath(start, goal, potmap, rnd = 0):
 				ln = ln + 1
 			
 		if np.array_equal(path[-1], goal):
-			print "Success at finding path!"		
+			print "Success at finding path!"
+			# TODO: Store all found paths and choose the shortest successful path
 			break
-				
+
 		
 	if n >= attempts-1:
 		print "Too many failed attempts at randomly finding path!"
+
+		# Temporary fix to random short paths
+		temppath = np.vstack((start, path))
+		print "Using Temppath Instead"
+		print temppath
+		return temppath
+		
+	else:
+		print "Success"	
+		print path
+		return path
 		#print path
-	
-	#print path
-	return path
 	
 #==============================================================================
 	#  Game Object Classes
@@ -444,7 +457,6 @@ def main():
 		# Side panel printing commands
 		Panelprint(screen, "Frame:%02d" % cnt, 0)
 		Panelprint(screen, "Travel time", 1, travtime)
-		#TODO: Fix travel time when relocating
 		Panelprint(screen, "YouBot Position", 2, youbot.rect.center)
 		Panelprint(screen, "Distance to Goal", 3, np.round(np.sqrt(abs(youbot.rect.center[0]-GoalTile[0])+abs(youbot.rect.center[1]-GoalTile[1])), 2))
 		Panelprint(screen, "Step Number", 4, pathind)
@@ -523,7 +535,11 @@ def main():
 				Printontiles(printnum, printxy, printpot, potmap, background, tilefont)
 				Backprint(background, EnvSize, TileSize, SidePanel)
 				pathind = 0
-				arrived = 0
+				if np.array_equal(youbot.xytarg, CentreTiles[transtonum(goal)]):
+					potpath = np.vstack((potpath, (goal)))
+					print "YouBot is already at Goal!"
+				print "potpath"
+				print potpath
 				#relocate = 1
 #				youdiff = abs(np.subtract(CentreTiles, youbot.rect.center))
 #				younum = np.argmin(youdiff[:,0]+youdiff[:,1])
