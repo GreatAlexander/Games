@@ -427,8 +427,8 @@ def main():
 	clock = pygame.time.Clock()
 
 	# Start and Goal positions (Max x=5, Max y=9)	
-	start=(2,9)
-	goal=(3,0)
+	start= [2,9]
+	goal= [3,0]
 	blockxy =[(1,6), (4,3)]
 	
 	youbot = YouBot()
@@ -486,6 +486,10 @@ def main():
 	goalsprite.setposxy(GoalTile)
 	block0.setposxy(Block0Tile)
 	block1.setposxy(Block1Tile)
+	
+	tup = start
+	youbot.setcurrtile(tup)
+	MDPNav = 0
 	
 	# Adding World and Policy calculations
 	w = gridworld()
@@ -557,12 +561,26 @@ def main():
 		pygame.display.flip()
 		
 		# Set next target once Youbot arrives to previously set target
-		if youbot.ontarget == 1 and pathind < potpath.shape[0]:
+		if youbot.ontarget == 1 and pathind < potpath.shape[0] and MDPNav == 0:
 			tup = tuple(potpath.astype(int)[pathind - 1])
 			youbot.setcurrtile(tup)
-			print("Policy: %s" % p.getPolicyFromUtilityVector(tup))
 			youbot.setxytarget((CentreTiles[transtonum((potpath[pathind]))]))		
 			pathind = pathind + 1
+		elif youbot.ontarget == 1 and MDPNav == 1 and arrived == 0:
+			print("Q Values:")
+			print(p.getQValues(tup))
+			print("Policy: %s" % p.getPolicyFromUtilityVector(tup))
+			a = p.getPolicyFromUtilityVector(tup)
+			if a == 'N':
+				tup[1] = tup[1] - 1
+			elif a == 'S':
+				tup[1] = tup[1] + 1
+			elif a == 'W':
+				tup[0] = tup[0] - 1
+			elif a == 'E':
+				tup[0] = tup[0] + 1
+			youbot.setxytarget((CentreTiles[transtonum(tup)]))
+			
 		# TODO: Add elif for using MDP Policy instead of Potential field
 		
 		
