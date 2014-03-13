@@ -7,31 +7,40 @@
 # Details: First navigation experiment
 # TODO: (EASY) Add distance to closest obstacle
 # TODO: (EASY) Implement checkable box
+# TODO: (EASY) Add start sprite as with goal sprite
+# TODO: (EASY) Refactor code so main options can be changed from one section
+# TODO: (EASY) Rename functions/constants/varaibles for good code practice
+# TODO: (EASY) Comment EVERYTHING
 # TODO: (MEDIUM) Store all found paths and choose the shortest successful path
 # TODO: (HARD) Implement A* when box is checked
 #==============================================================================
 
 
 #==============================================================================
-	#import os, pygame, sys, random, numpy
 import os, pygame, sys
 from pygame.locals import *
 import numpy as np
 
+from GridWorld import GridWorld
+from Policy import Policy
+
 import time
 
+#import random
 #import AStar
 
 if not pygame.font: print('Warning, fonts disabled')
 if not pygame.mixer: print('Warning, sound disabled')
 
-	#  Set Main and Resource directories
+#  Set Main and Resource directories
 main_dir = os.path.split(os.path.abspath(__file__))[0]
 data_dir = os.path.join(main_dir, 'Resources')
 #==============================================================================
 
 #==============================================================================
-	#  Image / Sound Resource Loader Functions
+# RESOURCE LOADING FUNCTIONS	
+
+#  Image Loader Function
 def load_image(name, colorkey=None):
 	'''Function to load image from resource folder'''
 	fullname = os.path.join(data_dir, name)
@@ -47,6 +56,7 @@ def load_image(name, colorkey=None):
 		image.set_colorkey(colorkey, RLEACCEL)
 	return image, image.get_rect()
 
+# Sound Loader Function
 def load_sound(name):
 	'''Function to load sound from resource folder'''
 	class NoneSound:
@@ -60,26 +70,49 @@ def load_sound(name):
 		print (('Cannot load sound: %s' % fullname))
 		raise SystemExit(str(geterror()))
 	return sound
+	
 #==============================================================================
 
 #==============================================================================
-	# Constant Values
-SidePanel	= 300				# Size of Information Panel
-EnvSize	= (360, 600)		# Size of Experiment Environment
+# CONSTANT VALUES	
+
+SidePanel	= 300			# Size of Information Panel
+EnvSize	= (360, 600)	# Size of Experiment Environment
+TileSize	= (60, 60)		# Size of InSpace Tiles
+
+# Total screen size, including environment and side panel
 TotalSize 	= (EnvSize [0] + SidePanel, EnvSize [1])
-TileSize	= (60, 60)			# Size of InSpace Tiles
+
+# Diagonal length of a tile (Forgot why I calculated it for - unused)
 TileDiag	= np.sqrt(np.power(TileSize[0],2)+np.power(TileSize[1],2))
+
+# Total number of tiles in x and y axes
 NumTiles	= (EnvSize[0]/TileSize[0], EnvSize[1]/TileSize[1])
-RobSize	= (38, 58)			# YouBot Size
-CentreTiles= np.zeros((NumTiles[0]*NumTiles[1],2))	# Array Containing x,y co-ordinates of Tile centers
+RobSize	= (38, 58)					# YouBot Size
 
+# Array Containing x,y co-ordinates of tile centers
+CentreTiles= np.zeros((NumTiles[0]*NumTiles[1],2))
 
+# Colours
 WHITE	= (255, 255, 255)
 BLACK	= (0, 0, 0)
 RED   = (255, 0, 0)
 
+# Mouse button values
 LEFT = 1
 RIGHT = 2
+
+#==============================================================================
+# INITIAL SETTINGS
+
+
+
+
+
+
+
+
+
 
 #==============================================================================
 	# Useful Functions
@@ -93,9 +126,10 @@ def transtoxy(num):
 	'''Transform Tile sequential number into x,y index'''
 	y = num // NumTiles[0]
 	x = num % NumTiles[0]
-	return x, y
+	return (x,y)
 	
 def Printontiles(printnum, printxy, printpot, potmap, background, tilefont):
+	'''Print Tile numbers, x/y coordinates, potential field colours & values'''
 	for y in range(0, NumTiles[1]):
 		for x in range(0, NumTiles[0]):
 			
@@ -146,8 +180,6 @@ def Backprint(background, EnvSize, TileSize, SidePanel):
 	pygame.draw.rect(background, BLACK, (EnvSize[0]+1, 0, EnvSize[0]+10, EnvSize[1]))
 	pygame.draw.rect(background, WHITE, (EnvSize[0]+11, 0, EnvSize[0]+11+SidePanel, EnvSize[1]))
 	
-	
-	
 		
 def PotField(mapsize, start, goal, blocks=None):
 	
@@ -155,7 +187,7 @@ def PotField(mapsize, start, goal, blocks=None):
 	sval = 0
 	gval = -1 * max(mapsize[0],mapsize[1])
 	blocktol = 1
-	blockcost = 3
+	blockcost = 4
 	goalbonus = 5
 	#self.Map(start) = 0
 	#self.Map(goal) = -1 * mapsize[0]	
@@ -174,7 +206,7 @@ def PotField(mapsize, start, goal, blocks=None):
 					if blocks[i][0]+x < 0 or blocks[i][0]+x >= mapsize[1]:
 						continue
 					PotMap[blocks[i][1]+y,blocks[i][0]+x] = PotMap[blocks[i][1]+y,blocks[i][0]+x] + blockcost
-			PotMap[blocks[i][1],blocks[i][0]] = PotMap[blocks[i][1],blocks[i][0]] + blockcost * 1
+			PotMap[blocks[i][1],blocks[i][0]] = PotMap[blocks[i][1],blocks[i][0]] + blockcost * 4
 	
 	PotMap[goal[1],goal[0]] = 0
 	
@@ -187,12 +219,13 @@ def findPotpath(start, goal, potmap, rnd = 0):
 	patt = 0
 	temppath = np.array((start))
 	for n in range(0, attempts):
-		path = np.array((start))
+		maxln = 15
+		path = np.zeros((1,2))
+		path[0] = start
 		currnode=start
 		mapsize = potmap.shape
 		fail = 0
 		ln = 0
-		maxln = 15
 		mintol = 0	# Add tolerance to avoid local minima, but increases path length and randomness
 		
 		while np.array_equal(path[-1], goal) == False:
@@ -259,6 +292,31 @@ def findPotpath(start, goal, potmap, rnd = 0):
 		return path
 		#print path
 	
+def gridworld():
+	
+	w = GridWorld([[GridWorld.CELL_VOID, GridWorld.CELL_VOID, GridWorld.CELL_VOID, GridWorld.CELL_EXIT, GridWorld.CELL_VOID, GridWorld.CELL_VOID], 
+			   [GridWorld.CELL_VOID, GridWorld.CELL_VOID, GridWorld.CELL_VOID, GridWorld.CELL_VOID, GridWorld.CELL_VOID, GridWorld.CELL_VOID],
+			   [GridWorld.CELL_VOID, GridWorld.CELL_VOID, GridWorld.CELL_VOID, GridWorld.CELL_VOID, GridWorld.CELL_VOID, GridWorld.CELL_VOID],
+			   [GridWorld.CELL_VOID, GridWorld.CELL_VOID, GridWorld.CELL_VOID, GridWorld.CELL_VOID, GridWorld.CELL_PIT, GridWorld.CELL_VOID],
+			   [GridWorld.CELL_VOID, GridWorld.CELL_VOID, GridWorld.CELL_VOID, GridWorld.CELL_VOID, GridWorld.CELL_VOID, GridWorld.CELL_VOID],
+			   [GridWorld.CELL_VOID, GridWorld.CELL_VOID, GridWorld.CELL_VOID, GridWorld.CELL_VOID, GridWorld.CELL_VOID, GridWorld.CELL_VOID],
+			   [GridWorld.CELL_VOID, GridWorld.CELL_PIT, GridWorld.CELL_VOID, GridWorld.CELL_VOID, GridWorld.CELL_VOID, GridWorld.CELL_VOID],
+			   [GridWorld.CELL_VOID, GridWorld.CELL_VOID, GridWorld.CELL_VOID, GridWorld.CELL_VOID, GridWorld.CELL_VOID, GridWorld.CELL_VOID],
+			   [GridWorld.CELL_VOID, GridWorld.CELL_VOID, GridWorld.CELL_VOID, GridWorld.CELL_VOID, GridWorld.CELL_VOID, GridWorld.CELL_VOID],
+			   [GridWorld.CELL_VOID, GridWorld.CELL_VOID, GridWorld.CELL_VOID, GridWorld.CELL_VOID, GridWorld.CELL_VOID, GridWorld.CELL_VOID]], discountFactor = 1 )
+	
+	w.setRewards(-0.04, -1, 1)
+	w.setProbabilities(0.8, 0.1, 0.1, 0)
+#	w.setDiscountFactor(0.6)
+	return w
+	
+def policy(w):
+	
+	p = Policy(w)
+	p.policyIteration(turbo=True)
+	
+	return p
+	
 #==============================================================================
 	#  Game Object Classes
 class YouBot(pygame.sprite.Sprite):
@@ -272,14 +330,19 @@ class YouBot(pygame.sprite.Sprite):
 		self.speed = np.array((1,1))
 		self.xytarg = self.rect.center
 		self.ontarget = 0
+		self.currtile = (0,0)
 	
-	def setstartxy(self, startxy):
+	def setposxy(self, startxy):
 		self.rect.center = startxy	
 		self.xytarg = self.rect.center
 		
 	def setxytarget(self, xycoord):
 		"Set YouBot Move target"
 		self.xytarg = xycoord
+		
+	def setcurrtile(self, currtile):
+		"Set current tile of YouBot"
+		self.currtile = currtile
 		
 	def update(self):
 		"YouBot movement update"
@@ -321,22 +384,24 @@ class Goal(pygame.sprite.Sprite):
 
 		self.rect.topleft = (posx, posy)
 		
-	def setstartxy(self, startxy):
+	def setposxy(self, startxy):
 		self.rect.center = startxy
 		
-	def update(self, nextpos):
-		"YouBot movement"
+class Start(pygame.sprite.Sprite):
+	"""Start Sprite"""
+	def __init__(self, posx = 195, posy = 15):
+		pygame.sprite.Sprite.__init__(self) # Call Sprite Initialiser
+		self.image, self.rect = load_image('start.png', -1)
+		self.image = pygame.transform.scale(self.image, (35, 35))
+		self.rect = self.image.get_rect()
+
+		self.rect.topleft = (posx, posy)
 		
-		self._move(dirxy)
-		
-	def _move(self, dirxy):
-		"Update position of YouBot"
-		currpos = np.matrix(self.rect.center)
-		xymat = np.matrix(dirxy)
-		self.nextpos = currpos + xymat
+	def setposxy(self, startxy):
+		self.rect.center = startxy
 		
 class Block(pygame.sprite.Sprite):
-	"""Goal Sprite"""
+	"""Block Sprite"""
 	def __init__(self, posx = 195, posy = 15):
 		pygame.sprite.Sprite.__init__(self) # Call Sprite Initialiser
 		self.image, self.rect = load_image('danger.png')
@@ -345,19 +410,8 @@ class Block(pygame.sprite.Sprite):
 
 		self.rect.topleft = (posx, posy)
 		
-	def setstartxy(self, startxy):
+	def setposxy(self, startxy):
 		self.rect.center = startxy
-		
-	def update(self, nextpos):
-		"YouBot movement"
-		
-		self._move(dirxy)
-		
-	def _move(self, dirxy):
-		"Update position of YouBot"
-		currpos = np.matrix(self.rect.center)
-		xymat = np.matrix(dirxy)
-		self.nextpos = currpos + xymat
 
 #==============================================================================
 	# Main Process
@@ -428,10 +482,19 @@ def main():
 	pathind = 1
 	cnt = 0
 	arrived = 0
-	youbot.setstartxy(StartTile)
-	goalsprite.setstartxy(GoalTile)
-	block0.setstartxy(Block0Tile)
-	block1.setstartxy(Block1Tile)
+	youbot.setposxy(StartTile)
+	goalsprite.setposxy(GoalTile)
+	block0.setposxy(Block0Tile)
+	block1.setposxy(Block1Tile)
+	
+	# Adding World and Policy calculations
+	w = gridworld()
+	p = policy(w)
+	
+	print(p.utilityVectorToString())
+	print(p.policyToString())
+	print ""
+	print(p.getPolicyFromUtilityVector(start))
 	
 	tstart = time.clock()
 	tstop = time.clock()
@@ -457,27 +520,35 @@ def main():
 		# Side panel printing commands
 		Panelprint(screen, "Frame:%02d" % cnt, 0)
 		Panelprint(screen, "Travel time", 1, travtime)
-		Panelprint(screen, "YouBot Position", 2, youbot.rect.center)
-		Panelprint(screen, "Distance to Goal", 3, np.round(np.sqrt(abs(youbot.rect.center[0]-GoalTile[0])+abs(youbot.rect.center[1]-GoalTile[1])), 2))
-		Panelprint(screen, "Step Number", 4, pathind)
-		if arrived:
-			Panelprint(screen, "YouBot has arrived!", 5)
-		elif np.array_equal(start, goal) == False:
-			tstop = time.clock()
-		Panelprint(screen, "Cursor Position", 6, pygame.mouse.get_pos())
-		Panelprint(screen, "Goal Position", 7, goalsprite.rect.center)
-		Panelprint(screen, "Block0 Position", 8, block0.rect.center)
-		Panelprint(screen, "Block1 Position", 9, block1.rect.center)
-		Panelprint(screen, "Start Position", 11, start)
+		
+		Panelprint(screen, "Start Tile", 3, CentreTiles[transtonum(start)])
+		Panelprint(screen, "YouBot Position", 4, youbot.rect.center)
+		Panelprint(screen, "Goal Position", 5, goalsprite.rect.center)
+		Panelprint(screen, "Distance to Goal", 6, np.round(np.sqrt(abs(youbot.rect.center[0]-GoalTile[0])+abs(youbot.rect.center[1]-GoalTile[1])), 2))
+		Panelprint(screen, "Step Number", 7, pathind)
+
+		
+
+		Panelprint(screen, "Block0 Position", 9, block0.rect.center)
+		Panelprint(screen, "Block1 Position", 10, block1.rect.center)
+
 		if pressed:
 			if picked == 0:
-				Panelprint(screen, "Relocating Block0", 10)
+				Panelprint(screen, "Relocating Block0", 11)
 			elif picked == 1:
-				Panelprint(screen, "Relocating Block1", 10)
+				Panelprint(screen, "Relocating Block1", 11)
 			elif picked == 2:
-				Panelprint(screen, "Relocating YouBot", 10)
+				Panelprint(screen, "Relocating YouBot", 11)
 			elif picked == 3:
-				Panelprint(screen, "Relocating Goal", 10)
+				Panelprint(screen, "Relocating Goal", 11)
+				
+		Panelprint(screen, "Cursor Position", 14, pygame.mouse.get_pos())
+				
+		if arrived:
+			Panelprint(screen, "YouBot has arrived!", 16)
+		elif np.array_equal(start, goal) == False:
+			tstop = time.clock()		
+
 		Panelprint(screen, "Bottom", 29)
 		if np.array_equal(potpath[-1], goal) == False and np.array_equal(CentreTiles[transtonum(potpath[-1])], youbot.rect.center):
 			Panelprint(screen, "Youbot stuck at Local Minima!", 12)
@@ -487,9 +558,15 @@ def main():
 		
 		# Set next target once Youbot arrives to previously set target
 		if youbot.ontarget == 1 and pathind < potpath.shape[0]:
+			tup = tuple(potpath.astype(int)[pathind - 1])
+			youbot.setcurrtile(tup)
+			print("Policy: %s" % p.getPolicyFromUtilityVector(tup))
 			youbot.setxytarget((CentreTiles[transtonum((potpath[pathind]))]))		
 			pathind = pathind + 1
-			
+		# TODO: Add elif for using MDP Policy instead of Potential field
+		
+		
+		
 		youbot.update()
 		
 		# Check if the YouBot has reached its goal destination
@@ -550,32 +627,32 @@ def main():
 			if np.array_equal(start, goal) == False:
 				tstart = time.clock()
 			if relocate == 1:	
-				youbot.setstartxy(CentreTiles[transtonum(start)])
+				youbot.setposxy(CentreTiles[transtonum(start)])
 				#relocate = 0
 			
 		if pressed == 1:
 			if picked == 0:	# "Chosen Block0"
 				tilediff = abs(np.subtract(CentreTiles, pygame.mouse.get_pos()))
 				num = np.argmin(tilediff[:,0]+tilediff[:,1])
-				block0.setstartxy(CentreTiles[num])
+				block0.setposxy(CentreTiles[num])
 				blockxy[0] = transtoxy(num)
 				
 			elif picked == 1:	# "Chosen Block1"
 				tilediff = abs(np.subtract(CentreTiles, pygame.mouse.get_pos()))
 				num = np.argmin(tilediff[:,0]+tilediff[:,1])				
-				block1.setstartxy(CentreTiles[np.argmin(tilediff[:,0]+tilediff[:,1])])				
+				block1.setposxy(CentreTiles[np.argmin(tilediff[:,0]+tilediff[:,1])])				
 				blockxy[1] = transtoxy(num)
 				
 			elif picked == 2:	# "Chosen YouBot"
 				tilediff = abs(np.subtract(CentreTiles, pygame.mouse.get_pos()))
 				num = np.argmin(tilediff[:,0]+tilediff[:,1])
-				youbot.setstartxy(CentreTiles[np.argmin(tilediff[:,0]+tilediff[:,1])])
+				youbot.setposxy(CentreTiles[np.argmin(tilediff[:,0]+tilediff[:,1])])
 				start = transtoxy(num)
 				
 			elif picked == 3:	# "Chosen Goal"
 				tilediff = abs(np.subtract(CentreTiles, pygame.mouse.get_pos()))
 				num = np.argmin(tilediff[:,0]+tilediff[:,1])
-				goalsprite.setstartxy(CentreTiles[np.argmin(tilediff[:,0]+tilediff[:,1])])
+				goalsprite.setposxy(CentreTiles[np.argmin(tilediff[:,0]+tilediff[:,1])])
 				goal = transtoxy(num)
 				
 
