@@ -1,9 +1,10 @@
 '''
 @author: Miro Mannino
+# Adapted by Alejandro Bordallo
 
 '''
 
-import tkinter
+#import tkinter
 import random
 
 class GridWorld:
@@ -126,7 +127,7 @@ class GridWorld:
 						self.ACTION_EAST  : self.prob[self.PROB_FORWARD]}
 			
 		if not (self.__cells[position[1]][position[0]] == self.CELL_VOID):
-			return [] #we can do anything in the wall, in a pit or in a exit
+			return [] #we can't do anything in the wall, in a pit or in an exit
 		
 		prob = getProbabilitiesFromAction(worldAction)
 		result = []  
@@ -154,32 +155,32 @@ class GridWorld:
 			if numRows > 0: ris += "\n"
 		return ris
 	
-	def newCanvasToDraw(self, master):
-		return tkinter.Canvas(master, width  = self.drawing_offset[0] 
-											 + self.size[0] * self.drawing_BoxSide 
-											 + (self.size[0] - 1) * self.drawing_BoxMargin, 
-									  height = self.drawing_offset[1] 
-									  		 + self.size[1] * self.drawing_BoxSide 
-									  		 + (self.size[1] - 1) * self.drawing_BoxMargin)
-		
-	def draw(self, canvas):
-		m = self.drawing_BoxMargin
-		s = self.drawing_BoxSide
-		ox, oy = self.drawing_offset
-		for x in range(self.size[0]):
-			for y in range(self.size[1]):
-				xp, yp = x*(s+m) + ox, y*(s+m) + oy
-				if self.__cells[y][x] == self.CELL_WALL:
-					color = "#%02x%02x%02x" % (128,128,128)
-				elif self.__cells[y][x] == self.CELL_EXIT:
-					color = "#%02x%02x%02x" % (0,255,0)
-				elif self.__cells[y][x] == self.CELL_PIT:
-					color = "#%02x%02x%02x" % (255,0,0)
-				else:
-					color = "#%02x%02x%02x" % (255,255,255)
-				canvas.create_rectangle(xp, yp, xp + s, yp + s, fill=color)
-		
+#	def newCanvasToDraw(self, master):
+#		return tkinter.Canvas(master, width  = self.drawing_offset[0] 
+#											 + self.size[0] * self.drawing_BoxSide 
+#											 + (self.size[0] - 1) * self.drawing_BoxMargin, 
+#									  height = self.drawing_offset[1] 
+#									  		 + self.size[1] * self.drawing_BoxSide 
+#									  		 + (self.size[1] - 1) * self.drawing_BoxMargin)
+#		
+#	def draw(self, canvas):
+#		m = self.drawing_BoxMargin
+#		s = self.drawing_BoxSide
+#		ox, oy = self.drawing_offset
+#		for x in range(self.size[0]):
+#			for y in range(self.size[1]):
+#				xp, yp = x*(s+m) + ox, y*(s+m) + oy
+#				if self.__cells[y][x] == self.CELL_WALL:
+#					color = "#%02x%02x%02x" % (128,128,128)
+#				elif self.__cells[y][x] == self.CELL_EXIT:
+#					color = "#%02x%02x%02x" % (0,255,0)
+#				elif self.__cells[y][x] == self.CELL_PIT:
+#					color = "#%02x%02x%02x" % (255,0,0)
+#				else:
+#					color = "#%02x%02x%02x" % (255,255,255)
+#				canvas.create_rectangle(xp, yp, xp + s, yp + s, fill=color)
 	
+
 #===========================================================================
 # TEST
 #===========================================================================
@@ -187,6 +188,7 @@ if __name__ == '__main__':
 
 	w = GridWorld([[GridWorld.CELL_VOID, GridWorld.CELL_VOID, GridWorld.CELL_VOID, GridWorld.CELL_EXIT], 
 			   [GridWorld.CELL_VOID, GridWorld.CELL_WALL, GridWorld.CELL_VOID, GridWorld.CELL_PIT],
+#			   [GridWorld.CELL_VOID, GridWorld.CELL_VOID, GridWorld.CELL_VOID, GridWorld.CELL_VOID],
 			   [GridWorld.CELL_VOID, GridWorld.CELL_VOID, GridWorld.CELL_VOID, GridWorld.CELL_VOID]])
 	
 	print("GridWorld:")
@@ -194,7 +196,7 @@ if __name__ == '__main__':
 	
 	print("\nSome transitions:")
 	print(w.transitionFunction((1,0), GridWorld.ACTION_NORTH))
-	print(w.transitionFunction((0,0), GridWorld.ACTION_NORTH))
+	print(w.transitionFunction((2,1), GridWorld.ACTION_EAST))
 	print(w.transitionFunction((1,0), GridWorld.ACTION_SOUTH))
 	print(w.transitionFunction((1,0), GridWorld.ACTION_SOUTH))
 	

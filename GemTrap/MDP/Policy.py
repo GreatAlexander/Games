@@ -1,11 +1,13 @@
 '''
 @author: Miro Mannino
+# Adapted by Alejandro Bordallo
 
 '''
 
 from GridWorld import GridWorld
-from tkinter import *
+#from tkinter import *
 import math
+import time
 
 class Policy:
 	
@@ -55,6 +57,7 @@ class Policy:
 		   
 		   returns the number of iterations it needs for converge
 		''' 
+		t0 = time.clock()
 		eps = Policy.valueIterationEepsilon
 		dfact = self.world.discFactor
 		c, r = self.world.size
@@ -84,7 +87,9 @@ class Policy:
 				print("warning: max number of iterations exceeded")
 		
 		if debugCallback: reiterate = debugCallback(self, True)
-					
+		
+		print "VI Time:"
+		print time.clock() - t0
 		return self.numOfIterations
 	
 	def __cellUtility(self, x, y):
@@ -127,7 +132,7 @@ class Policy:
 		   
 		   returns the number of iterations it needs to find the fixed point
 		'''
-		
+		t1 = time.clock()
 		c, r = self.world.size
 		policy = self.__createEmptyPolicy()
 		
@@ -170,7 +175,9 @@ class Policy:
 		
 		if debugCallback:
 					reiterate = debugCallback(self, True)
-					
+		
+		print "PI Time:"
+		print time.clock() - t1
 		return self.numOfIterations
 	
 	def policyEvaluation(self, policy, turbo = False):
@@ -181,7 +188,7 @@ class Policy:
 		dfact = self.world.discFactor
 		c, r = self.world.size
 		
-		turbo = False
+#		turbo = False
 		if turbo: newUv = self.utilities
 		
 		numOfIterations = 0
@@ -210,7 +217,7 @@ class Policy:
 			if maxNorm <= eps * (1 - dfact)/dfact: reiterate = False
 			elif numOfIterations >= Policy._pe_maxk: reiterate = False
 				
-		print(numOfIterations)
+		print("Policy Evaluations: %d" % numOfIterations)
 			
 	#===========================================================================
 	# Other functions
@@ -416,16 +423,26 @@ class Policy:
 #===========================================================================
 if __name__ == '__main__':
 
-	w = GridWorld([[GridWorld.CELL_VOID, GridWorld.CELL_VOID, GridWorld.CELL_VOID, GridWorld.CELL_EXIT], 
-			   [GridWorld.CELL_VOID, GridWorld.CELL_WALL, GridWorld.CELL_VOID, GridWorld.CELL_PIT],
-			   [GridWorld.CELL_VOID, GridWorld.CELL_VOID, GridWorld.CELL_VOID, GridWorld.CELL_VOID]], discountFactor = 1 )
+	w = GridWorld([[GridWorld.CELL_VOID, GridWorld.CELL_VOID, GridWorld.CELL_VOID, GridWorld.CELL_EXIT, GridWorld.CELL_VOID, GridWorld.CELL_VOID], 
+			   [GridWorld.CELL_VOID, GridWorld.CELL_VOID, GridWorld.CELL_VOID, GridWorld.CELL_VOID, GridWorld.CELL_VOID, GridWorld.CELL_VOID],
+			   [GridWorld.CELL_VOID, GridWorld.CELL_VOID, GridWorld.CELL_VOID, GridWorld.CELL_VOID, GridWorld.CELL_VOID, GridWorld.CELL_VOID],
+			   [GridWorld.CELL_VOID, GridWorld.CELL_VOID, GridWorld.CELL_VOID, GridWorld.CELL_VOID, GridWorld.CELL_PIT, GridWorld.CELL_VOID],
+			   [GridWorld.CELL_VOID, GridWorld.CELL_VOID, GridWorld.CELL_VOID, GridWorld.CELL_VOID, GridWorld.CELL_VOID, GridWorld.CELL_VOID],
+			   [GridWorld.CELL_VOID, GridWorld.CELL_VOID, GridWorld.CELL_VOID, GridWorld.CELL_VOID, GridWorld.CELL_VOID, GridWorld.CELL_VOID],
+			   [GridWorld.CELL_VOID, GridWorld.CELL_PIT, GridWorld.CELL_VOID, GridWorld.CELL_VOID, GridWorld.CELL_VOID, GridWorld.CELL_VOID],
+			   [GridWorld.CELL_VOID, GridWorld.CELL_VOID, GridWorld.CELL_VOID, GridWorld.CELL_VOID, GridWorld.CELL_VOID, GridWorld.CELL_VOID],
+			   [GridWorld.CELL_VOID, GridWorld.CELL_VOID, GridWorld.CELL_VOID, GridWorld.CELL_VOID, GridWorld.CELL_VOID, GridWorld.CELL_VOID],
+			   [GridWorld.CELL_VOID, GridWorld.CELL_VOID, GridWorld.CELL_VOID, GridWorld.CELL_VOID, GridWorld.CELL_VOID, GridWorld.CELL_VOID]], discountFactor = 1 )
+	
+	
+	
 	w.setRewards(-0.04, -1, 1)
 	w.setProbabilities(0.8, 0.1, 0.1, 0)
-	print("GridWorld-----------")
+	print("-GridWorld-")
 	print(w)
-	print("----------------")
+	print("-----------")
 	
-	print("\nPolicy----------")
+	print("\n---Policy---")
 	p = Policy(w)
 	
 	print("ValueIteration iterations: %d" % p.valueIteration())
@@ -438,7 +455,7 @@ if __name__ == '__main__':
 	print("----------------")
 	
 	p.resetResults()
-	print("Policy iterations: %d" % p.policyIteration(turbo=True))
+	print("Policy Improvements: %d" % p.policyIteration(turbo=True))
 	print(p.utilityVectorToString())
 	print(p.policyToString())
 	print("----------------")
