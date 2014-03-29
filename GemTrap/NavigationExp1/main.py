@@ -6,7 +6,6 @@
 # Details: First navigation experiment
 # TODO: (EASY) Add distance to closest obstacle
 # TODO: (EASY) Implement checkable box
-# TODO: (EASY) Refactor code so main options can be changed from one section
 # TODO: (EASY) Rename functions/constants/varaibles for good code practice
 # TODO: (EASY) *Ongoing* Comment EVERYTHING and REFACTOR
 # TODO: (MEDIUM) Store all found paths and choose the shortest successful path
@@ -35,12 +34,11 @@ if not pygame.mixer: print('Warning, sound disabled')
 #  Set Main and Resource directories
 main_dir = os.path.split(os.path.abspath(__file__))[0]
 data_dir = os.path.join(main_dir, 'Resources')
+
 #==============================================================================
 
 #==============================================================================
 	# RESOURCE LOADING FUNCTIONS
-#******************************************************************************	
-
 #******************************************************************************	
 #  Image Loader Function
 def load_image(name, colorkey=None):
@@ -57,8 +55,7 @@ def load_image(name, colorkey=None):
 			colorkey = image.get_at((0,0))
 		image.set_colorkey(colorkey, RLEACCEL)
 	return image, image.get_rect()
-# *****************************************************************************	
-
+	
 # *****************************************************************************	
 # Sound Loader Function
 def load_sound(name):
@@ -74,14 +71,12 @@ def load_sound(name):
 		print (('Cannot load sound: %s' % fullname))
 		raise SystemExit(str(geterror()))
 	return sound
-# *****************************************************************************	
 	
-#==============================================================================
+# *****************************************************************************	
 
 #==============================================================================
 	# CONSTANT VALUES
 # *****************************************************************************
-
 SidePanel	= 300			# Size of Information Panel
 EnvSize	= (360, 600)	# Size of Experiment Environment
 TileSize	= (60, 60)		# Size of InSpace Tiles
@@ -125,7 +120,7 @@ def transtoxy(num):
 	x = num % NumTiles[0]
 	return (x,y)
 	
-def Printontiles(printnum, printxy, printpot, potmap, background, tilefont):
+def Printontiles(printind, potmap, background, tilefont):
 	'''Print tile index numbers, (x,y) coordinates or potential field colours & values'''
 	
 	for y in range(0, NumTiles[1]):
@@ -135,19 +130,23 @@ def Printontiles(printnum, printxy, printpot, potmap, background, tilefont):
 			# Calculate (x,y) coordinate of tile centre given the (x,y) index and size of tile
 			CentreTiles[transtonum(xy)] = (TileSize[0]/2 + TileSize[0]*(x),TileSize[1]/2 + TileSize[1]*(y))
 
-			if printnum:	# Print tile index on the center of tile
+			if printind == 0:	# Print tile index on the center of tile
+				pygame.draw.rect(background, WHITE, (int(CentreTiles[transtonum(xy),0]-TileSize[0]/2), int(CentreTiles[transtonum(xy),1]-TileSize[1]/2), int(CentreTiles[transtonum(xy),0]+TileSize[0]/2), int(CentreTiles[transtonum(xy),1]+TileSize[1]/2)))				
 				text = tilefont.render(str(int(transtonum(xy)+1)), 1, BLACK)
 				background.blit(text, (CentreTiles[transtonum(xy),0]-10,CentreTiles[transtonum(xy),1]))
 
-			if printxy:	# Print tile (x,y) coordinate on center
+			elif printind == 1:	# Print tile (x,y) coordinate on center
+				pygame.draw.rect(background, WHITE, (int(CentreTiles[transtonum(xy),0]-TileSize[0]/2), int(CentreTiles[transtonum(xy),1]-TileSize[1]/2), int(CentreTiles[transtonum(xy),0]+TileSize[0]/2), int(CentreTiles[transtonum(xy),1]+TileSize[1]/2)))				
 				text = tilefont.render(str(int(CentreTiles[transtonum(xy),0])) + ',' + str(int(CentreTiles[transtonum(xy),1])), 1, BLACK)
-				background.blit(text, (CentreTiles[transtonum(xy),0]-20,CentreTiles[transtonum(xy),1]))
+				background.blit(text, (CentreTiles[transtonum(xy),0]-26,CentreTiles[transtonum(xy),1]))
 
-			if printpot:	# Colour Tiles following potential field and print potential values
+			elif printind == 2:	# Colour Tiles following potential field and print potential values
 				col = 255 - int(255 * ((potmap[y,x] - np.amin(potmap)) / np.ptp(potmap)))
 				pygame.draw.rect(background, (col, col, col), (int(CentreTiles[transtonum(xy),0]-TileSize[0]/2), int(CentreTiles[transtonum(xy),1]-TileSize[1]/2), int(CentreTiles[transtonum(xy),0]+TileSize[0]/2), int(CentreTiles[transtonum(xy),1]+TileSize[1]/2)))
 				text = tilefont.render(str(int(potmap[y,x])), 1, RED)	
-				background.blit(text, (CentreTiles[transtonum(xy),0]-10,CentreTiles[transtonum(xy),1]))
+				background.blit(text, (CentreTiles[transtonum(xy),0]-4,CentreTiles[transtonum(xy),1]))
+			else:
+				print "Printing index is out of bounds"
 	
 def Panelprint(screen, name, y, fr=None):
 	'''Print information on side panel'''
@@ -319,7 +318,6 @@ def gridworld():
 	
 def policy(w):
 	''' Calculate policy for given world'''
-	
 	p = Policy(w)
 	p.policyIteration(turbo=True)
 	
@@ -339,7 +337,6 @@ class YouBot(pygame.sprite.Sprite):
 		self.speed = np.array((1,1))
 		self.xytarg = self.rect.center
 		self.ontarget = 0
-		self.currtile = (0,0)
 	
 	def setposxy(self, startxy):
 		self.rect.center = startxy	
@@ -348,10 +345,6 @@ class YouBot(pygame.sprite.Sprite):
 	def setxytarget(self, xycoord):
 		"Set YouBot target for moving towards"
 		self.xytarg = xycoord
-		
-	def setcurrtile(self, currtile):
-		"Set current tile of YouBot"
-		self.currtile = currtile
 		
 	def update(self):
 		"YouBot movement update"
@@ -392,7 +385,6 @@ class Goal(pygame.sprite.Sprite):
 		self.image, self.rect = load_image('goal.png', -1)
 		self.image = pygame.transform.scale(self.image, (35, 35))
 		self.rect = self.image.get_rect()
-
 		self.rect.topleft = (posx, posy)
 		
 	def setposxy(self, startxy):
@@ -407,7 +399,6 @@ class Start(pygame.sprite.Sprite):
 		self.image, self.rect = load_image('start.png', -1)
 		self.image = pygame.transform.scale(self.image, (35, 35))
 		self.rect = self.image.get_rect()
-
 		self.rect.topleft = (posx, posy)
 		
 	def setposxy(self, startxy):
@@ -422,7 +413,6 @@ class Block(pygame.sprite.Sprite):
 		self.image, self.rect = load_image('danger.png')
 		self.image = pygame.transform.scale(self.image, (59, 59))
 		self.rect = self.image.get_rect()
-
 		self.rect.topleft = (posx, posy)
 		
 	def setposxy(self, startxy):
@@ -432,7 +422,7 @@ class Block(pygame.sprite.Sprite):
 	# MAIN PROCESS
 #******************************************************************************
 def main():
-	"""this function is called when the program starts. It initializes everything it needs, then runs in a loop until the function returns."""
+	"""This function is called when the program starts."""
 
 	print "Initialising..."
 	#*************************************************************************
@@ -445,17 +435,27 @@ def main():
 	#*************************************************************************
 
 	#*************************************************************************
-	# PARAMETER SETUP
+	# PARAMETERS SETUP
 	# Start, Goal and Obstacle positions (Max x=5, y=9)	
 	start= [2,9]
 	goal= [3,0]
 	blockxy =[(1,6), (4,3)]
+	
+	# Pixel tolerance for picking something up with cursor
+	clicktol = 30
 	
 	# Generate Potential Field
 	potmap = PotField((NumTiles[1],NumTiles[0]), start, goal, blockxy)
 	
 	# Find stochastic optimal path for potential field
 	potpath = findPotpath(start, goal, potmap, 1)
+	
+	# Numbering of Tiles
+	tilefont = pygame.font.SysFont("monospace", 13)
+	# printind = 0		# Print Tile Number on the center
+	# printind = 1		# Print Tile Coordinate on center
+	printind = 2		# Colour Tiles as Potential Field
+	
 	#*************************************************************************
 	
 	#*************************************************************************
@@ -482,45 +482,41 @@ def main():
 	background = pygame.Surface(screen.get_size())
 	background = background.convert()
 	
-	# Numbering of Tiles
-	tilefont = pygame.font.SysFont("monospace", 15)
-	printnum= 0		# Print Tile Number on the center
-	printxy = 0		# Print Tile Coordinate on center
-	printpot= 1	# Colour Tiles as Potential Field
-	Printontiles(printnum, printxy, printpot, potmap, background, tilefont)
+	# Print tiles, background and side panel
+	Printontiles(printind, potmap, background, tilefont)
+	Backprint(background, EnvSize, TileSize, SidePanel)	
 
-	Backprint(background, EnvSize, TileSize, SidePanel)
 	#*************************************************************************
 	
 	#*************************************************************************
-
+	# INITIALISATION
+	mouseenable = 1	# Enable mouse control
+	pressed = 0		# Set mouse click to de-pressed state
+	pathind = 1		# Path step index
+	frm = 0			# Current Frame number
+	arrived = 0		# YouBot has not arrived at its target yet
+	MDPNav = 1		# Enable/Disable MDP Navigation instead of Potential Field	
 	
-	StartTile= CentreTiles[transtonum(start)]	
-	GoalTile = CentreTiles[transtonum(goal)]
-	Block0Tile=CentreTiles[transtonum(blockxy[0])]
-	Block1Tile=CentreTiles[transtonum(blockxy[1])]
+	# Store centre position of important tiles
+	StartTile	= CentreTiles[transtonum(start)]
+	GoalTile	= CentreTiles[transtonum(goal)]
+	Block0Tile= CentreTiles[transtonum(blockxy[0])]
+	Block1Tile= CentreTiles[transtonum(blockxy[1])]
 	
-	mouseenable = 1
-	pressed = 0
-	clicktol = 30
-	relocate = 1
-	
-	pathind = 1
-	cnt = 0
-	arrived = 0
+	# Set sprite positions to centre of the important tiles
 	youbot.setposxy(StartTile)
 	startsprite.setposxy(StartTile)
 	goalsprite.setposxy(GoalTile)
 	block0.setposxy(Block0Tile)
 	block1.setposxy(Block1Tile)
 	
-	tup = start
-	youbot.setcurrtile(tup)
-	MDPNav = 0
-	
+	# Next position for each policy step
+	pos = start
+
 	# MDP environment intialisation and Policy generation
-	w = gridworld()
-	p = policy(w)
+	if MDPNav == 1:
+		w = gridworld()
+		p = policy(w)
 	
 #	print(p.utilityVectorToString())
 #	print(p.policyToString())
@@ -538,10 +534,10 @@ def main():
 	while going:			# Main game loop
 		
 		clock.tick(60)		# Set frames per second
-		if cnt >= 30:		# Independent frame counter
-			cnt = 0
+		if frm >= 30:		# Independent frame counter
+			frm = 0
 		else:
-			cnt = cnt + 1
+			frm = frm + 1
 		
 		screen.blit(background, (0, 0))	# Put background on screen
 		
@@ -552,12 +548,14 @@ def main():
 		Goalsprite.draw(screen)
 		YouBotsprite.draw(screen)
 		
+		# Calculate YouBot travel time (If very small consider negligible)
 		travtime = np.round(tstop - tstart, 2)
 		if travtime < 0.1:
 			travtime = 0
-			
-		# Side panel printing commands
-		Panelprint(screen, "Frame:%02d" % cnt, 0)
+		
+		#********************************************************************
+		# SIDE PANEL
+		Panelprint(screen, "Frame:%02d" % frm, 0)
 		Panelprint(screen, "Travel time", 1, travtime)
 		
 		Panelprint(screen, "Start Tile", 3, CentreTiles[transtonum(start)])
@@ -569,7 +567,7 @@ def main():
 		Panelprint(screen, "Block0 Position", 9, block0.rect.center)
 		Panelprint(screen, "Block1 Position", 10, block1.rect.center)
 
-		if pressed:
+		if pressed:		# Check if the cursor is picking something up
 			if picked == 0:
 				Panelprint(screen, "Relocating Block0", 11)
 			elif picked == 1:
@@ -592,30 +590,31 @@ def main():
 			
 		pygame.display.flip()
 		
+		#********************************************************************
+		# PATH COMPUTATION
+		
 		# Set next target once Youbot arrives to previously set target
+			# Potential Field
 		if youbot.ontarget == 1 and pathind < potpath.shape[0] and MDPNav == 0:
-			tup = tuple(potpath.astype(int)[pathind - 1])
-			youbot.setcurrtile(tup)
 			youbot.setxytarget((CentreTiles[transtonum((potpath[pathind]))]))		
 			pathind = pathind + 1
+			
+			# MDP Policy computation
 		elif youbot.ontarget == 1 and MDPNav == 1 and arrived == 0:
 			# print("Q Values:")
-			# print(p.getQValues(tup))
-			# print("Policy: %s" % p.getPolicyFromUtilityVector(tup))
-			a = p.getPolicyFromUtilityVector(tup)
+			# print(p.getQValues(pos))
+			# print("Policy: %s" % p.getPolicyFromUtilityVector(pos))
+			a = p.getPolicyFromUtilityVector(pos)
 			if a == 'N':
-				tup[1] = tup[1] - 1
+				pos[1] = pos[1] - 1
 			elif a == 'S':
-				tup[1] = tup[1] + 1
+				pos[1] = pos[1] + 1
 			elif a == 'W':
-				tup[0] = tup[0] - 1
+				pos[0] = pos[0] - 1
 			elif a == 'E':
-				tup[0] = tup[0] + 1
-			youbot.setxytarget((CentreTiles[transtonum(tup)]))
-			
-		# TODO: Add elif for using MDP Policy instead of Potential field
+				pos[0] = pos[0] + 1
+			youbot.setxytarget((CentreTiles[transtonum(pos)]))
 
-		
 		youbot.update()
 		
 		# Check if the YouBot has reached its goal destination
@@ -623,6 +622,9 @@ def main():
 			print "YouBot has arrived!"
 			arrived = 1
 			
+		#********************************************************************
+		# KEYBOARD AND MOUSE EVENTS
+		
 		event = pygame.event.poll()
 		key = pygame.key.get_pressed()
 		
@@ -656,11 +658,11 @@ def main():
 				arrived = 0
 				
 				#start = transtoxy(youbot.xytarg)
-				if picked != 2 and relocate == 1:
+				if picked != 2:
 					start = potpath[pathind-1]
 				potmap = PotField((NumTiles[1],NumTiles[0]), start, goal, blockxy)		
 				potpath = findPotpath(start, goal, potmap, 1)
-				Printontiles(printnum, printxy, printpot, potmap, background, tilefont)
+				Printontiles(printind, potmap, background, tilefont)
 				Backprint(background, EnvSize, TileSize, SidePanel)
 				pathind = 0
 				if np.array_equal(youbot.xytarg, CentreTiles[transtonum(goal)]):
@@ -668,7 +670,6 @@ def main():
 					print "YouBot is already at Goal!"
 				print "potpath"
 				print potpath
-				# relocate = 1
 				# youdiff = abs(np.subtract(CentreTiles, youbot.rect.center))
 				# younum = np.argmin(youdiff[:,0]+youdiff[:,1])
 				# start = potpath[pathind]
@@ -678,10 +679,8 @@ def main():
 			# If YouBot is at the start of path then reset clock unless it does not need to move
 			if np.array_equal(start, goal) == False:
 				tstart = time.clock()
-			if relocate == 1:
 				# Update position of YouBot when sprite gets relocated
 				youbot.setposxy(CentreTiles[transtonum(start)])
-				#relocate = 0
 			
 		if pressed == 1:
 			# Pressed left mouse button
@@ -711,16 +710,14 @@ def main():
 				goalsprite.setposxy(CentreTiles[num])
 				goal = transtoxy(num)
 				
-
-	# End of program
+	#*************************************************************************
+	# END OF PROGRAM
 	print "Exiting..."
 	pygame.quit()
 	sys.exit()
 
 #==============================================================================
 	# Run code if called as main
-
 if __name__ == '__main__':
 	main()
-
 #==============================================================================
