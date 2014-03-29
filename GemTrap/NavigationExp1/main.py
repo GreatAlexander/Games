@@ -5,7 +5,6 @@
 # NavigationExp1 - by Alejandro Bordallo
 # Details: First navigation experiment
 # TODO: (EASY) Add distance to closest obstacle
-# TODO: (EASY) Implement checkable box
 # TODO: (EASY) Rename functions/constants/varaibles for good code practice
 # TODO: (EASY) *Ongoing* Comment EVERYTHING and REFACTOR
 # TODO: (MEDIUM) Store all found paths and choose the shortest successful path
@@ -68,7 +67,7 @@ def load_sound(name):
 	try:
 		sound = pygame.mixer.Sound(fullname)
 	except pygame.error:
-		print (('Cannot load sound: %s' % fullname))
+		print (('Cannot load sound: {0}'.format(fullname)))
 		raise SystemExit(str(geterror()))
 	return sound
 	
@@ -97,11 +96,17 @@ CentreTiles= np.zeros((NumTiles[0]*NumTiles[1],2))
 # Colours
 WHITE	= (255, 255, 255)
 BLACK	= (0, 0, 0)
-RED   = (255, 0, 0)
+RED   	= (255, 0, 0)
+GREEN	= (0, 255, 0)
+BLUE		= (0, 0, 255)
 
 # Mouse button values
 LEFT = 1
 RIGHT = 2
+
+# Mouse pixel click tolerances
+ClickTol = 30
+PanelTol = 10
 
 #==============================================================================
 	# USEFUL FUNCTIONS
@@ -163,6 +168,29 @@ def Panelprint(screen, name, y, fr=None):
 		text = panelfont.render(name, 1, BLACK)
 		screen.blit(text, (EnvSize[0] + tab, y * space))
 		
+def Checkboxprint(screen, boxnum, checked, boxnames):
+	'''Print checkboxes on side panel'''
+	
+	checkboxfont = pygame.font.SysFont("monospace", 15)
+	
+	tab = 20
+	space = 30
+	boxsize = 20
+	y = 310
+	boxcentres = np.zeros((boxnum, 2))
+	
+	for i in range(0, boxnum):
+		pygame.draw.rect(screen, BLACK, (EnvSize[0]+tab, y+(i*space), boxsize, boxsize))
+		if checked[i] == 1:		
+			pygame.draw.rect(screen, GREEN, (EnvSize[0]+tab +3, (y+(i*space))+3, boxsize-6, boxsize-6))
+		else:
+			pygame.draw.rect(screen, WHITE, (EnvSize[0]+tab +3, (y+(i*space))+3, boxsize-6, boxsize-6))
+		text = checkboxfont.render(boxnames[i], 1, BLACK)
+		screen.blit(text, (EnvSize[0] + tab + boxsize + 2, y+(i*space)))
+		boxcentres[i] = EnvSize[0] + tab + (boxsize / 2), y+(i*space) + (boxsize / 2) 
+		
+	return boxcentres
+	
 def Backprint(background, EnvSize, TileSize, SidePanel):
 	''' Print background lines and side panel'''
 	
@@ -436,13 +464,17 @@ def main():
 
 	#*************************************************************************
 	# PARAMETERS SETUP
+	mouseenable = 1	# Enable mouse control
+	pressed = 0		# Set mouse click to de-pressed state
+	pathind = 1		# Path step index
+	frm = 0			# Current Frame number
+	arrived = 0		# YouBot has not arrived at its target yet
+	MDPNav = 0		# Enable/Disable MDP Navigation instead of Potential Field	
+
 	# Start, Goal and Obstacle positions (Max x=5, y=9)	
 	start= [2,9]
 	goal= [3,0]
 	blockxy =[(1,6), (4,3)]
-	
-	# Pixel tolerance for picking something up with cursor
-	clicktol = 30
 	
 	# Generate Potential Field
 	potmap = PotField((NumTiles[1],NumTiles[0]), start, goal, blockxy)
@@ -455,6 +487,13 @@ def main():
 	# printind = 0		# Print Tile Number on the center
 	# printind = 1		# Print Tile Coordinate on center
 	printind = 2		# Colour Tiles as Potential Field
+	
+	# CheckBoxes
+	boxnum = 2
+	checked = [0, 1]
+	if len(checked) != boxnum:
+		print "Checkbox numbers do not match!"
+	boxnames = ["Stop YouBot", "Enable MDP Planning"]
 	
 	#*************************************************************************
 	
@@ -490,12 +529,6 @@ def main():
 	
 	#*************************************************************************
 	# INITIALISATION
-	mouseenable = 1	# Enable mouse control
-	pressed = 0		# Set mouse click to de-pressed state
-	pathind = 1		# Path step index
-	frm = 0			# Current Frame number
-	arrived = 0		# YouBot has not arrived at its target yet
-	MDPNav = 1		# Enable/Disable MDP Navigation instead of Potential Field	
 	
 	# Store centre position of important tiles
 	StartTile	= CentreTiles[transtonum(start)]
@@ -552,6 +585,9 @@ def main():
 		travtime = np.round(tstop - tstart, 2)
 		if travtime < 0.1:
 			travtime = 0
+			
+		closest = 0
+		mindist = 20
 		
 		#********************************************************************
 		# SIDE PANEL
@@ -564,6 +600,7 @@ def main():
 		Panelprint(screen, "Distance to Goal", 6, np.round(np.sqrt(abs(youbot.rect.center[0]-GoalTile[0])+abs(youbot.rect.center[1]-GoalTile[1])), 2))
 		Panelprint(screen, "Step Number", 7, pathind)
 
+		Panelprint(screen, "Closest Obstacle: Block{0} at {1}".format(closest, mindist), 8)
 		Panelprint(screen, "Block0 Position", 9, block0.rect.center)
 		Panelprint(screen, "Block1 Position", 10, block1.rect.center)
 
@@ -576,17 +613,19 @@ def main():
 				Panelprint(screen, "Relocating YouBot", 11)
 			elif picked == 3:
 				Panelprint(screen, "Relocating Goal", 11)
-				
+		
+		if arrived:
+			Panelprint(screen, "YouBot has arrived!", 13)
+		elif np.array_equal(start, goal) == False:
+			tstop = time.clock()	
+		
 		Panelprint(screen, "Cursor Position", 14, pygame.mouse.get_pos())
 				
-		if arrived:
-			Panelprint(screen, "YouBot has arrived!", 16)
-		elif np.array_equal(start, goal) == False:
-			tstop = time.clock()		
-
 		Panelprint(screen, "Bottom", 29)
 		if np.array_equal(potpath[-1], goal) == False and np.array_equal(CentreTiles[transtonum(potpath[-1])], youbot.rect.center):
 			Panelprint(screen, "Youbot stuck at Local Minima!", 12)
+			
+		boxcentres = Checkboxprint(screen, boxnum, checked, boxnames)
 			
 		pygame.display.flip()
 		
@@ -615,7 +654,8 @@ def main():
 				pos[0] = pos[0] + 1
 			youbot.setxytarget((CentreTiles[transtonum(pos)]))
 
-		youbot.update()
+		if checked[0] == 0:
+			youbot.update()
 		
 		# Check if the YouBot has reached its goal destination
 		if youbot.ontarget == 1 and arrived == 0 and np.array_equal(youbot.xytarg, CentreTiles[transtonum(goal)]):
@@ -632,24 +672,33 @@ def main():
 			going = False	# Be IDLE friendly
 			
 		if mouseenable == 1:
-			if event.type == pygame.MOUSEBUTTONDOWN and event.button == LEFT:
+			if event.type == pygame.MOUSEBUTTONDOWN and event.button == LEFT and pressed == 0:
 				# When left mouse button is clicked, find closest object to cursor
 				pressed = 1	# Raise flag to signify we are picking something up
+				picked = -1
 				
-				if abs(event.pos[0] - block0.rect.center[0]) < clicktol and abs(event.pos[1] - block0.rect.center[1]) < clicktol:
+				if abs(event.pos[0] - block0.rect.center[0]) < ClickTol and abs(event.pos[1] - block0.rect.center[1]) < ClickTol:
 					picked = 0	# Picked Block0
 					
-				elif abs(event.pos[0] - block1.rect.center[0]) < clicktol and abs(event.pos[1] - block1.rect.center[1]) < clicktol:
+				elif abs(event.pos[0] - block1.rect.center[0]) < ClickTol and abs(event.pos[1] - block1.rect.center[1]) < ClickTol:
 					picked = 1	# Picked Block1
 					
-				elif abs(event.pos[0] - youbot.rect.center[0]) < clicktol and abs(event.pos[1] - youbot.rect.center[1]) < clicktol:
+				elif abs(event.pos[0] - youbot.rect.center[0]) < ClickTol and abs(event.pos[1] - youbot.rect.center[1]) < ClickTol:
 					picked = 2	# Picked YouBot
 					
-				elif abs(event.pos[0] - goalsprite.rect.center[0]) < clicktol and abs(event.pos[1] - goalsprite.rect.center[1]) < clicktol:
+				elif abs(event.pos[0] - goalsprite.rect.center[0]) < ClickTol and abs(event.pos[1] - goalsprite.rect.center[1]) < ClickTol:
 					picked = 3	# Picked Goal
 					
 				else:
-					picked = -1	# Picked NONE
+					picked = -1
+					pressed = 0
+					
+				if abs(event.pos[0] - boxcentres[0][0]) < PanelTol and abs(event.pos[1] - boxcentres[0][1]) < PanelTol:
+					checked[0] = 1 - checked[0]	# Check/Uncheck Box 0
+					pressed = 0
+					
+				elif abs(event.pos[0] - boxcentres[1][0]) < PanelTol and abs(event.pos[1] - boxcentres[1][1]) < PanelTol:
+					checked[1] = 1 - checked[1]	# Check/Uncheck Box 1
 					pressed = 0
 				
 			elif event.type == pygame.MOUSEBUTTONUP and event.button == LEFT and pressed == 1:
