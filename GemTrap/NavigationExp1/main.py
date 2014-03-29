@@ -6,7 +6,6 @@
 # Details: First navigation experiment
 # TODO: (EASY) Add distance to closest obstacle
 # TODO: (EASY) Implement checkable box
-# TODO: (EASY) Add start sprite as with goal sprite
 # TODO: (EASY) Refactor code so main options can be changed from one section
 # TODO: (EASY) Rename functions/constants/varaibles for good code practice
 # TODO: (EASY) *Ongoing* Comment EVERYTHING and REFACTOR
@@ -464,6 +463,10 @@ def main():
 	# Initialise YouBot representation
 	youbot = YouBot()
 	YouBotsprite = pygame.sprite.RenderPlain(youbot)
+	
+	# Initialise Start representation
+	startsprite = Start()
+	Startsprite = pygame.sprite.RenderPlain(startsprite)
 
 	# Initialise Goal representation
 	goalsprite = Goal()
@@ -506,13 +509,14 @@ def main():
 	cnt = 0
 	arrived = 0
 	youbot.setposxy(StartTile)
+	startsprite.setposxy(StartTile)
 	goalsprite.setposxy(GoalTile)
 	block0.setposxy(Block0Tile)
 	block1.setposxy(Block1Tile)
 	
 	tup = start
 	youbot.setcurrtile(tup)
-	MDPNav = 1
+	MDPNav = 0
 	
 	# MDP environment intialisation and Policy generation
 	w = gridworld()
@@ -544,12 +548,14 @@ def main():
 		# Draw all sprites to the screen
 		Block0sprite.draw(screen)
 		Block1sprite.draw(screen)
+		Startsprite.draw(screen)
 		Goalsprite.draw(screen)
 		YouBotsprite.draw(screen)
 		
 		travtime = np.round(tstop - tstart, 2)
 		if travtime < 0.1:
 			travtime = 0
+			
 		# Side panel printing commands
 		Panelprint(screen, "Frame:%02d" % cnt, 0)
 		Panelprint(screen, "Travel time", 1, travtime)
@@ -642,9 +648,10 @@ def main():
 					
 				else:
 					picked = -1	# Picked NONE
+					pressed = 0
 				
-			elif event.type == pygame.MOUSEBUTTONUP and event.button == LEFT:
-				# De-pressed left mouse button
+			elif event.type == pygame.MOUSEBUTTONUP and event.button == LEFT and pressed == 1:
+				# De-pressed left mouse button and picking something up
 				pressed = 0
 				arrived = 0
 				
@@ -688,19 +695,20 @@ def main():
 			elif picked == 1:	# "Chosen Block1"
 				tilediff = abs(np.subtract(CentreTiles, pygame.mouse.get_pos()))
 				num = np.argmin(tilediff[:,0]+tilediff[:,1])				
-				block1.setposxy(CentreTiles[np.argmin(tilediff[:,0]+tilediff[:,1])])				
+				block1.setposxy(CentreTiles[num])				
 				blockxy[1] = transtoxy(num)
 				
 			elif picked == 2:	# "Chosen YouBot"
 				tilediff = abs(np.subtract(CentreTiles, pygame.mouse.get_pos()))
 				num = np.argmin(tilediff[:,0]+tilediff[:,1])
-				youbot.setposxy(CentreTiles[np.argmin(tilediff[:,0]+tilediff[:,1])])
+				youbot.setposxy(CentreTiles[num])
+				startsprite.setposxy(CentreTiles[num])
 				start = transtoxy(num)
 				
 			elif picked == 3:	# "Chosen Goal"
 				tilediff = abs(np.subtract(CentreTiles, pygame.mouse.get_pos()))
 				num = np.argmin(tilediff[:,0]+tilediff[:,1])
-				goalsprite.setposxy(CentreTiles[np.argmin(tilediff[:,0]+tilediff[:,1])])
+				goalsprite.setposxy(CentreTiles[num])
 				goal = transtoxy(num)
 				
 
