@@ -4,9 +4,8 @@
 #==============================================================================
 # NavigationExp1 - by Alejandro Bordallo
 # Details: First navigation experiment
-# TODO: (EASY) Add distance to closest obstacle
 # TODO: (EASY) Rename functions/constants/varaibles for good code practice
-# TODO: (EASY) *Ongoing* Comment EVERYTHING and REFACTOR
+# TODO: (EASY) *Ongoing* COMMENT and REFACTOR
 # TODO: (MEDIUM) Store all found paths and choose the shortest successful path
 # TODO: (HARD) Implement A* when box is checked
 #==============================================================================
@@ -351,6 +350,18 @@ def policy(w):
 	
 	return p
 	
+def closestobst(youbot, BlockTile):
+	
+	dist = np.zeros((len(BlockTile),1))	
+	
+	for i in range(len(BlockTile)):
+		dist[i] = np.sqrt(np.square(abs(youbot.rect.center[0] - BlockTile[i][0])) + np.square(abs(youbot.rect.center[1] - BlockTile[i][1])))
+		
+	obstind = np.argmin(dist)
+	obstdist= np.round(dist[obstind], 2)
+	
+	return obstind, obstdist
+	
 #==============================================================================
 	#  GAME SPRITES
 #******************************************************************************
@@ -475,6 +486,7 @@ def main():
 	start= [2,9]
 	goal= [3,0]
 	blockxy =[(1,6), (4,3)]
+	numblocks = len(blockxy)
 	
 	# Generate Potential Field
 	potmap = PotField((NumTiles[1],NumTiles[0]), start, goal, blockxy)
@@ -533,15 +545,16 @@ def main():
 	# Store centre position of important tiles
 	StartTile	= CentreTiles[transtonum(start)]
 	GoalTile	= CentreTiles[transtonum(goal)]
-	Block0Tile= CentreTiles[transtonum(blockxy[0])]
-	Block1Tile= CentreTiles[transtonum(blockxy[1])]
+	BlockTile = np.zeros((numblocks, 2))
+	BlockTile[0]= CentreTiles[transtonum(blockxy[0])]
+	BlockTile[1]= CentreTiles[transtonum(blockxy[1])]
 	
 	# Set sprite positions to centre of the important tiles
 	youbot.setposxy(StartTile)
 	startsprite.setposxy(StartTile)
 	goalsprite.setposxy(GoalTile)
-	block0.setposxy(Block0Tile)
-	block1.setposxy(Block1Tile)
+	block0.setposxy(BlockTile[0])
+	block1.setposxy(BlockTile[1])
 	
 	# Next position for each policy step
 	pos = start
@@ -585,9 +598,6 @@ def main():
 		travtime = np.round(tstop - tstart, 2)
 		if travtime < 0.1:
 			travtime = 0
-			
-		closest = 0
-		mindist = 20
 		
 		#********************************************************************
 		# SIDE PANEL
@@ -600,7 +610,8 @@ def main():
 		Panelprint(screen, "Distance to Goal", 6, np.round(np.sqrt(abs(youbot.rect.center[0]-GoalTile[0])+abs(youbot.rect.center[1]-GoalTile[1])), 2))
 		Panelprint(screen, "Step Number", 7, pathind)
 
-		Panelprint(screen, "Closest Obstacle: Block{0} at {1}".format(closest, mindist), 8)
+		obstind, obstdist = closestobst(youbot, BlockTile)
+		Panelprint(screen, "Closest: Block{0} at {1}".format(obstind, obstdist), 8)
 		Panelprint(screen, "Block0 Position", 9, block0.rect.center)
 		Panelprint(screen, "Block1 Position", 10, block1.rect.center)
 
@@ -758,6 +769,14 @@ def main():
 				num = np.argmin(tilediff[:,0]+tilediff[:,1])
 				goalsprite.setposxy(CentreTiles[num])
 				goal = transtoxy(num)
+				
+		#********************************************************************
+		# UPDATE VALUES
+		# Important tiles
+		StartTile	= CentreTiles[transtonum(start)]
+		GoalTile	= CentreTiles[transtonum(goal)]
+		BlockTile[0]= CentreTiles[transtonum(blockxy[0])]
+		BlockTile[1]= CentreTiles[transtonum(blockxy[1])]
 				
 	#*************************************************************************
 	# END OF PROGRAM
