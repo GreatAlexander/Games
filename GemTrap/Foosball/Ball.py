@@ -18,8 +18,7 @@ class Ball(pygame.sprite.Sprite):
         self.pitch = pygame.Rect(WALL_WIDTH, WALL_WIDTH, Field[0], Field[1])
         self.pitch.center = CENTRE
         #self.area = (PITCH[0], PITCH[1])
-        #self.posx = 1000
-        #self.posy = 1000
+
         self.rect.topleft = (posx, posy)
         self.speed = 0
         self.orientation = 0
@@ -36,7 +35,7 @@ class Ball(pygame.sprite.Sprite):
             self._move(dirxy)
         elif push == 1:
             self._push(pushSpeed, pushOrient)
-
+												
         self._updatePosition()
         
 #    def calcangle(oldpos, newpos):
