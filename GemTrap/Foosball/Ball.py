@@ -54,7 +54,7 @@ class Ball(pygame.sprite.Sprite):
         
     def _updatePosition(self):
         "Update speed and position of ball."
-        self.changeDirectionSlightlyAfterNSteps(15)
+#        self.changeDirectionSlightlyAfterNSteps(60)
         xymod, xy = self.computeDynamics()
         
         self.getNextPosition(xymod)    
@@ -85,7 +85,7 @@ class Ball(pygame.sprite.Sprite):
         return np.matrix((xmod*xy[0], ymod*xy[1])), xy
     
     def getXY(self):
-        self.orientation %= 360
+#        self.orientation %= 360
         if self.orientation >= 0 and self.orientation < 90:
             return [1, -1]
         elif self.orientation >= 90 and self.orientation < 180:
