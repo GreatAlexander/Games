@@ -1,14 +1,14 @@
 # -*- coding: utf-8 -*-
 
 #==============================================================================
-# FOOZBALL - by Alejandro Bordallo
-# Details: Foozball game test, autonomous agents, simple ai, path planning
-# TODO:
+# FOOSBALL - by Alejandro Bordallo and Andrew Robinson
+# Details: Foozball game sim for autonomous agents, simple ai, path planning
+# TODO: Fix the weird bouncing angles that came from refactoring
 #==============================================================================
 
 
 #==============================================================================
-	#import os, pygame, sys, random, numpy
+
 import os, pygame, sys
 from pygame.locals import *
 import numpy as np
@@ -276,74 +276,6 @@ class Ball(pygame.sprite.Sprite):
 		'''
 		self.speed = speed
 		self.orientation = theta
-		
-
-#class Hero(pygame.sprite.Sprite):
-#	"""moves a clenched fist on the screen, following the mouse"""
-#	def __init__(self):
-#		pygame.sprite.Sprite.__init__(self) #call Sprite initializer
-#		self.image, self.rect = load_image('boy.png', -1)
-#		screen = pygame.display.get_surface()
-#		self.area = screen.get_rect()
-#		self.rect.topleft = (10, 10)
-#		self.speed = 20
-#		self.touching = 0
-#		self.dying = 0
-#
-#	def update(self,dirxy):
-#		"Move Hero character based on key presses or change appearance"
-#		#pos = pygame.mouse.get_pos()
-#		#self.rect.midtop = pos
-#		#if self.punching:
-#			#self.rect.move_ip(5, 10)
-#		if self.dying:
-#			self._dying()
-#		else:
-#			self._move(dirxy)
-#
-#	def touch(self, target):
-#		"Returns true if Ball collides with a target"
-#		if not self.touching:
-#			self.touching = 1
-#			hitbox = self.rect.inflate(-5, -5)
-#			return hitbox.colliderect(target.rect)
-#
-#	def _move(self, dirxy):
-#		"Update position of the ball"
-#		#currentPosition = self.rect.move((self.move, 0))
-#		currentPosition = np.matrix(self.rect.center)
-#		xymat = np.matrix(dirxy)
-#		nextPosition = currentPosition + xymat * self.speed
-#		if nextPosition[0, 0] > self.area.left and \
-#		nextPosition[0, 0] < self.area.right and \
-#		nextPosition[0, 1] > self.area.top and \
-#		nextPosition[0, 1] < self.area.bottom:
-#			move = nextPosition.tolist()
-#			self.rect.center = move[0]
-#
-#	def _dying(self):
-#		"Add sprite animations of character death = Explosions!"
-#
-#	def dead(self):
-#		"Hero has been struck!"
-#		self.dying = 1
-
-
-#Im2 = load_image('hyptosis_tile2.png', -1)
-
-#class Rock(pygame.sprite.Sprite):
-#	"""Produces a Rock"""
-#	def __init__(self, posxy):
-#		pygame.sprite.Sprite.__init__(self) #call Sprite initializer
-#		#self.image, self.rect = load_image('Rock.png', -1)
-#		#Im2.image, Im2.Rect = load_image('hyptosis_tile2.png', -1)
-#		Im = pygame.image.load('Resources\hyptosis_tile2.png')
-#		self.rect = pygame.Rect(196, 356, 60, 60)
-#		self.image = Im.subsurface(self.rect)
-#		screen = pygame.display.get_surface()
-#		self.area = screen.get_rect()
-#		self.rect.topleft = posxy
-#		self.touching = 0
 
 #==============================================================================
 
@@ -417,94 +349,22 @@ def main():
 	"""this function is called when the program starts. It initializes everything it needs, then runs in a loop until the function returns."""
 
 	screen = initializeEverything()
-	# self.gamestate = 1  # 1 - run, 0 - exit
+
 	#TODO Implement Full (Tiled/Object) Background
 	background = drawBackground(screen)
 	drawPitch(background)
 	#pygame.draw.circle(background, ORANGE, (CENTRE[0], CENTRE[1]), BALL_SIZE/2, 0)
 	centreTitleOnBackground(background)
 
-#Prepare Game Objects
+	# Prepare Game Objects
 	clock = pygame.time.Clock()
-	#hero = Hero()
-	#rock1 = Rock((100, 100))
-	#rock2 = Rock((200, 200))
-	#blob = Blob()
+
 	ball = Ball()
 	ballSprite = pygame.sprite.RenderPlain(ball)
-	#herosprite = pygame.sprite.RenderPlain((hero))
-	#rocksprite = pygame.sprite.RenderPlain(rock1, rock2)
-	#allsprites = pygame.sprite.RenderPlain((hero, rock, tree, gem, blob))
 
-	## Loading Resources
-
-	#numrocks = 3
-	#tilecomp2 = pygame.image.load('Resources\hyptosis_tile2.png')
-	#
-	#self.catImg = pygame.image.load('cat.png')
-	#self.boyImg = pygame.image.load('boy.png')
-	#self.gemImg = pygame.image.load('gem1.png'), pygame.image.load('gem5.png'), pygame.image.load('gem3.png'), pygame.image.load('gem4.png')
-	#self.treeImg = pygame.image.load('Tree_Short.png'), pygame.image.load('Tree_Tall.png'), pygame.image.load('Tree_Ugly.png')
-	#
-	#rock_rect = pygame.Rect(196, 357, 59, 59)
-	#self.rockImg = tilecomp2.subsurface(rock_rect)
-	## self.rockImg = [pygame.image.load('Rock.png')] * numrocks
-	#
-	#self.squirrImg = pygame.image.load('squirrel.png')
-	#self.deadImg = pygame.image.load('inkspillspot.png')
-
-	## FIELD OBJECT VARIABLES
-
-	# Cat Variables
-
-	#self.catx = Xres // 2		# Initial xpos for the cat agent
-	#self.caty = Yres // 2		# Initial ypos for the cat agent
-	#self.cat = Res // 2
-	#self.cstep = 4				# Size of cat step
-	#self.catmoves = 0			# Number of cat moves per second
-	#self.catxoff, catyoff = catImg.get_size()
-	#self.catwait = 30			# Reset value for catmoves
-	#self.catspeed = 1			# How quickly to renew movement
-
-	# Boy Variables
-
-	#self.boyx = Xres // 4
-	#self.boyy = Yres // 4
-	#self.bstep = 10
-	#self.boymoves = 0
-	#self.boymovetimer = 0
-	#self.boyspeed = 1
-	#self.boywait = 4
-	#self.boyxoff, boyyoff = boyImg.get_size()
-	#self.bmrg = 10				# Boy MARGIN on edge of screen
-
-
-	# Randomizing Gem & Tree locations
-
-	#self.gem = numpy.random.random_integers(10, Xres - 100, 8).reshape((4, 2))
-	#self.gemc = numpy.random.random_integers(10, Xres - 100, 8).reshape((4, 2))
-	#self.tree = numpy.random.random_integers(10, 500, 6).reshape((3, 2))
-	#self.rock = numpy.random.random_integers(10, 500, numrocks * 2).reshape((numrocks, 2))
-
-
-	# Check if gems are still in play (1 Yes, 0 No)
-	#gemobt = [1, 1, 1, 1]
-	#
-	## Calculate gem offset for collision detection
-	#gemoff = gemImg[0].get_size()
-
-	# Other variables
 
 	frame = 0				# Current Frame
-	#gembound = 30			# Collision boundary around gems
-	#catboundx = 60			# Collision boundary around catx
-	##catboundy = 35			# Collision boundary around caty
-	#dead = 0				# Dead flag = Game Over!
 
-	#self.loop()
-
-	#def game_exit(self):
-		#exit()
 	dirxy = [0, 0]
 	bounce = 0
 	move = 0
@@ -516,138 +376,13 @@ def main():
 		
 	while going:			# Main game loop
 		clock.tick(60)
-		## GEMS UPDATE
 
-		#for i in range(0,4):
-			#if gemobt[i]:
-				#self.surface.blit(gemImg[i], (gem[i,0], gem[i,1]))
-
-		## BOY UPDATE
-
-		#boymovetimer += 1
-
-		#if boymovetimer == FPS // boymoves and dead == 0:
-		#if not dead:
-			#boymovetimer = 0
-
-		# Handle Input Events
-		#dirxy = [0, 0]
-#		for event in pygame.event.get():
-#			if event.type == QUIT:
-#				going = False
-#			elif event.type == KEYDOWN and event.key == K_ESCAPE:
-#				going = False
-#				print('User quit the game')
-#			elif event.type == KEYDOWN:
-#				keys = pygame.key.get_pressed()
-#				if keys[K_LEFT]:
-#					dirxy[0] = dirxy[0] - 1
-#				if keys[K_RIGHT]:
-#					dirxy[0] = dirxy[0] + 1
-#				if keys[K_UP]:
-#					dirxy[1] = dirxy[1] - 1
-#				if keys[K_DOWN]:
-#					dirxy[1] = dirxy[1] + 1
-					
-		#if ball.nextPosition 
-
-		#self.surface.blit(boyImg, (boyx, boyy))
-	#
-		#if dead == 1:
-			#self.surface.blit(deadImg, (boyx - 10, boyy + 10))
-
-	## CAT UPDATE
-		#if catmoves <= 0:
-			#catmoves = catwait
-			#catran = random.randrange(1, 5)
-			#if catran == 1:				# 'right':
-				#catx += cstep
-				#if catx >= Xres - 150:
-					#catx -= cstep * 2
-			#elif catran == 2:			# 'down':
-				#caty += cstep
-				#if caty >= Yres - 100:
-					#caty -= cstep * 2
-			#elif catran == 3:			# 'left':
-				#catx -= cstep
-				#if catx <= 10:
-					#catx += cstep * 2
-			#elif catran == 4:			# 'up':
-				#caty -= cstep
-				#if caty <= 10:
-					#caty += cstep * 2
-
-		#self.surface.blit(catImg, (catx, caty))
-
-		## COLLISION Detector
-
-		# Update Collision Positions
-	#
-		#boyc = (boyx + (boyxoff // 2), boyy + (boyyoff // 2))
-		#catc = (catx + (catxoff // 2), caty + (catyoff // 2))
-		##gemc[0,0] = (gem[0,0] + gemoff[0]//2)
-	#
-		#for i in range(0, 4):
-			#gemc[i, 0] = (gem[i, 0] + gemoff[0] // 2)
-			#gemc[i, 1] = (gem[i, 1] + gemoff[1] // 2)
-
-		# Collision Time!
-
-		#if (catc[0] + catboundx > boyc[0] > catc[0] - catboundx) and (catc[1] + catboundy > boyc[1] > catc[1] - catboundy):
-			#dead = 1
-	#
-		#for i in range(0, 4):
-			#if (gemc[i, 0] + gembound > boyc[0] > gemc[i, 0] - gembound) and (gemc[i, 1] + gembound > boyc[1] > gemc[i, 1] - gembound):
-				#gemobt[i] = 0
-
-		## GAME EVOLUTION
-	#
-		#if not gemobt[0]:
-			#self.smth = 0
-		#if not gemobt[1]:
-			#if cstep >= 49:
-				#cstep = 49
-			#cstep += 1
-		#if not gemobt[2]:
-			#if catspeed >= 9:
-				#catspeed = 9
-			#catspeed += 1
-		#if not gemobt[3]:
-			#self.smth = 3
-
-		## FPS & Other UPDATE
-
-
-
-		# Update movement ticker
-		#if boymoves > 0:
-			#boymoves -= boyspeed
-		#if catmoves > 0:
-			#catmoves -= catspeed
-
-		# End Game
-
-		## Exit cases
-		#for event in pygame.event.get():
-			#if event.type == QUIT:
-				#pygame.quit()
-				#sys.exit()
-
-		# Run update and tick
-		#pygame.display.update()
-		#fpsClock.tick(FPS)
-
-		
-		#herosprite.update(dirxy)
-		#rocksprite.update()
 
 		ballSprite.update(dirxy, pushSpeed, pushOrient, bounce, move, push)
 		push = 0
 		
 		#Draw Everything
 		drawEverything(screen, background, ballSprite)
-		#rocksprite.draw(screen)
-		#herosprite.draw(screen)
 		
 		frame += 1
 		updateFeaturesOnScreen(screen, frame, ball)
@@ -657,8 +392,10 @@ def main():
 		
 		pygame.display.flip()
 		
-		if pygame.event.peek (QUIT):
-			going = False  # Be IDLE friendly
+		for event in pygame.event.get():
+			if event.type == QUIT or event.type == KEYDOWN and event.key == K_ESCAPE:
+				going = False
+				print('User quit the game')
 
 	pygame.quit()
 	sys.exit()
