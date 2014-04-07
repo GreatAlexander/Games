@@ -55,29 +55,29 @@ def load_sound(name):
 	# Constant Values
 FPS = 30			# Frames per second
 RField = (2370, 1140)	# Green Field
-RWallwidth = 100		# Wall width in mm
+R_WALL_WIDTH = 100		# Wall width in mm
 RTapewidth = 50		# Line width in mm
 RGoalwidth = 630		# Goal width in mm
 RGoaldepth = 50		# Goal depth in mm
 RBallsize = 50		# Ball diameter in mm
 
-RPitch = (RField[0]+2*(RWallwidth+RTapewidth), RField[1]+2*(RWallwidth+RTapewidth))	# X, Y in mm
+RPitch = (RField[0]+2*(R_WALL_WIDTH+RTapewidth), RField[1]+2*(R_WALL_WIDTH+RTapewidth))	# X, Y in mm
 Rdx = 2			# To fit on screen
 Rdy = 2
 Fntsize = 36
-Pitch = (RPitch[0]/Rdx, (RPitch[1]/Rdy))
+PITCH = (RPitch[0]/Rdx, (RPitch[1]/Rdy))
 Field = ((RField[0]+RTapewidth)/Rdx, ((RField[1]+RTapewidth)/Rdy))
-Wallwidth = RWallwidth / Rdx
+WALL_WIDTH = R_WALL_WIDTH / Rdx
 Tapewidth = RTapewidth / Rdx
 Goalwidth = RGoalwidth / Rdy
 Goaldepth = RGoaldepth / Rdx
-Ballsize = RBallsize / Rdx
-Ballradius = Ballsize / 2
-Center = (Pitch[0]/2, Pitch[1]/2)
-Res = (Pitch[0], Pitch[1] + Fntsize)		# Window Resolution
+BALL_SIZE = RBallsize / Rdx
+BALL_RADIUS = BALL_SIZE / 2
+CENTRE = (PITCH[0]/2, PITCH[1]/2)
+Res = (PITCH[0], PITCH[1] + Fntsize)		# Window Resolution
 Xres = Res[0]
 Yres = Res[1]
-Edge = Wallwidth + Tapewidth
+Edge = WALL_WIDTH + Tapewidth
 Linewidth = 3 * Tapewidth
 GRASS = (0, 148, 10)		# Field Colour
 WALL = (0, 0, 0)			# Wall Colour
@@ -88,9 +88,11 @@ LINE = (150, 150, 150)
 YELLOW = (255, 255, 0)
 BLUE = (0, 0, 255)
 ORANGE = (255, 140, 0)
-Frict = 0.99
-CFrict = 0.75			# Collision Friction
-Margin = 1
+TABLE_FRICTION = 1
+COLLISION_FRICTION = 1			# Collision TABLE_FRICTIONion
+MARGIN = 1
+
+TITLE_TEXT = 'Foosball Match'
 #==============================================================================
 
 	#TODO Implement Character Object properties
@@ -99,45 +101,39 @@ Margin = 1
 
 class Ball(pygame.sprite.Sprite):
 	"""Sprite for ball on the pitch"""
-	def __init__(self, posx = Center[0]-Ballradius, posy = Center[1]-Ballradius):
+	def __init__(self, posx = CENTRE[0]-BALL_RADIUS, posy = CENTRE[1]-BALL_RADIUS):
 		pygame.sprite.Sprite.__init__(self) #call Sprite initializer
-		#self.image = pygame.Surface([Ballsize, Ballsize])
+		#self.image = pygame.Surface([BALL_SIZE, BALL_SIZE])
 		#self.image.fill(ORANGE)
 		self.image, self.rect = load_image('ball.png', -1)
 		self.image = pygame.transform.scale(self.image, (25, 25))
-		self.rect = self.image.get_rect()
+		#self.rect = self.image.get_rect()
 		
 		#screen = pygame.display.get_surface()
 		#self.area = screen.get_rect()
-		self.pitch = pygame.Rect(Wallwidth, Wallwidth, Field[0], Field[1])
-		self.pitch.center = Center
-		#self.area = (Pitch[0], Pitch[1])
+		self.pitch = pygame.Rect(WALL_WIDTH, WALL_WIDTH, Field[0], Field[1])
+		self.pitch.center = CENTRE
+		#self.area = (PITCH[0], PITCH[1])
 		#self.posx = 1000
 		#self.posy = 1000
 		self.rect.topleft = (posx, posy)
 		self.speed = 0
 		self.orientation = 0
-		self.cnt = 0
+		self.count = 0
 		#self.touching = 0
 
 	
-	def update(self, dirxy, pushspeed, pushorient, bnc = 0, mv = 0, psh = 0):
-		"Move Hero character based on key presses or change appearance"
-		#pos = pygame.mouse.get_pos()
-		#self.rect.midtop = pos
-		#if self.punching:
-			#self.rect.move_ip(5, 10)
-		#if self.dying:
-		#	self._dying()
-		#else:
-		if bnc == 1:
+	def update(self, dirxy, pushSpeed, pushOrient, bounce = 0, move = 0, push = 0):
+		'''Update ball position.
+		'''
+		if bounce == 1:
 			self._bounce()
-		elif mv == 1:
+		elif move == 1:
 			self._move(dirxy)
-		elif psh == 1:
-			self._push(pushspeed, pushorient)
+		elif push == 1:
+			self._push(pushSpeed, pushOrient)
 
-		self._newpos()
+		self._updatePosition()
 		
 #	def calcangle(oldpos, newpos):
 #		"Calculate angle from 2 x,y cordinates"
@@ -151,125 +147,134 @@ class Ball(pygame.sprite.Sprite):
 #			xdif = abs(xdif)
 #		if ydif < 0:
 #			yneg = 1
-#			ydif = abs(ydif)
+#			ydif = abs(ydif)				
 		
+	def _updatePosition(self):
+		"Update speed and position of ball."
+		self.changeDirectionSlightlyAfterNSteps(15)
+		xymod, xy = self.computeDynamics()
 		
-		
+		self.getNextPosition(xymod)	
+		if self.hasHitWall():
+			self.bounceOffWall(xy)
 			
-	def _newpos(self):
-		"Update speed of ball"
-		currpos = np.matrix(self.rect.center)
-		mean = 0
-		dev = 1
-		if self.cnt >= 15  and self.speed != 0:
-			rand = np.random.normal(mean, dev)
-			self.cnt = 0
-		else:
-			rand = 0
-		self.cnt = self.cnt + 1
-		self.orientation = self.orientation + rand
-		#xy = [1, -1]
-		if self.orientation <= 0:
-			self.orientation = 359
-		elif self.orientation >= 360:
-			self.orientation = 1
+		self.getNextPosition(xymod)	
+		if self.hasHitWall():
+			self.moveBallWithinPitch()
+				
+		move = self.nextPosition.tolist()
+		self.rect.center = move[0]
+		
+		self.slowDownDueToTABLE_FRICTIONion()
+		self.stopIfSlowEnough(0.8)
+
+	def changeDirectionSlightlyAfterNSteps(self, steps):
+		self.count += 1
+		if self.count >= steps  and self.speed != 0:
+			self.count = 0
+			self.orientation +=  np.random.normal(0, 1)
+	
+	def computeDynamics(self):
+		angle = self.orientation % 90
+		xmod = self.speed * np.sin(np.deg2rad(angle))
+		ymod = self.speed * np.cos(np.deg2rad(angle))
+		xy = self.getXY()
+		return np.matrix((xmod*xy[0], ymod*xy[1])), xy
+	
+	def getXY(self):
+		self.orientation %= 360
 		if self.orientation >= 0 and self.orientation < 90:
-			angle = self.orientation
-			xy = [1, -1]
-			xmod = self.speed * np.sin(np.deg2rad(angle))
-			ymod = self.speed * np.cos(np.deg2rad(angle))
-			
+			return [1, -1]
 		elif self.orientation >= 90 and self.orientation < 180:
-			angle = self.orientation - 90
-			xy = [1, 1]
-			xmod = self.speed * np.cos(np.deg2rad(angle))
-			ymod = self.speed * np.sin(np.deg2rad(angle))
-			
+			return [1, 1]	
 		elif self.orientation >= 180 and self.orientation < 270:
-			angle = self.orientation - 180
-			xy = [-1, 1]
-			xmod = self.speed * np.sin(np.deg2rad(angle))
-			ymod = self.speed * np.cos(np.deg2rad(angle))			
-			
+			return [-1, 1]				
 		elif self.orientation >= 270 and self.orientation <= 360:
-			angle = self.orientation - 270
-			xy = [-1, -1]
-			xmod = self.speed * np.cos(np.deg2rad(angle))
-			ymod = self.speed * np.sin(np.deg2rad(angle))
-			
-#		xmod = self.speed * np.sin(np.deg2rad(angle))
-#		ymod = self.speed * np.cos(np.deg2rad(angle))
-		xymod = np.matrix((xmod*xy[0], ymod*xy[1]))
-		#self.nextpos = currpos + xymod + 
-		self.nextpos = currpos + xymod
+			return [-1, -1]
+	
+	def getNextPosition(self, xymod):
+		currentPosition = np.matrix(self.rect.center)
+		self.nextPosition = currentPosition + xymod
 		
-		if self.nextpos[0, 0] < self.pitch.left or \
-		self.nextpos[0, 0] > self.pitch.right:
+	def hasHitWall(self):
+		return self.hasGoneOffField()
+	
+	def hasGoneOffField(self):
+		return self.hasGoneOffFieldSide() or self.hasGoneOffFieldTopOrBottom()
+	
+	def hasGoneOffFieldSide(self):
+		return self.hasGoneOffFieldLeft() or self.hasGoneOffFieldRight()
+	
+	def hasGoneOffFieldLeft(self):
+		return self.nextPosition[0, 0] < self.pitch.left
+		
+	def hasGoneOffFieldRight(self):
+		return self.nextPosition[0, 0] > self.pitch.right
+	
+	def hasGoneOffFieldTopOrBottom(self):
+		return self.hasGoneOffFieldTop() or self.hasGoneOffFieldBottom()
+	
+	def hasGoneOffFieldTop(self):
+		return self.nextPosition[0, 1] < self.pitch.top
+	
+	def hasGoneOffFieldBottom(self):	
+		return self.nextPosition[0, 1] > self.pitch.bottom
+
+	def bounceOffWall(self, xy):
+		if self.hasGoneOffFieldSide():
 			self.orientation = 360 - self.orientation
-			self.speed = self.speed * CFrict
-#			if xy[0] == 1:
-#				self.orientation = 180 - self.orientation
-#			elif xy[1] == -1:
-#				self.orientation = 540 - self.orientation
-		if self.nextpos[0, 1] < self.pitch.top or \
-		self.nextpos[0, 1] > self.pitch.bottom:
-			self.speed = self.speed * CFrict
+		elif self.hasGoneOffFieldTopOrBottom():
 			if xy[0] == 1:
 				self.orientation = 180 - self.orientation
 			elif xy[0] == -1:
 				self.orientation = 540 - self.orientation
+		self.speed *= COLLISION_FRICTION
+		
+	def moveBallWithinPitch(self):
+		if self.hasGoneOffFieldLeft():
+			self.nextPosition[0, 0] = self.pitch.left + MARGIN
+		elif self.hasGoneOffFieldRight():
+			self.nextPosition[0, 0] = self.pitch.right - MARGIN
+		elif self.hasGoneOffFieldTop():
+			self.nextPosition[0, 1] = self.pitch.top + MARGIN
+		elif self.hasGoneOffFieldBottom():
+			self.nextPosition[0, 1] = self.pitch.bottom - MARGIN
 			
-		self.nextpos = currpos + xymod
-		
-		if self.nextpos[0, 0] < self.pitch.left:
-			self.nextpos[0, 0] = self.pitch.left + Margin
-		if self.nextpos[0, 0] > self.pitch.right:
-			self.nextpos[0, 0] = self.pitch.right - Margin
-		if self.nextpos[0, 1] < self.pitch.top:
-			self.nextpos[0, 1] = self.pitch.top + Margin
-		if self.nextpos[0, 1] > self.pitch.bottom:
-			self.nextpos[0, 1] = self.pitch.bottom - Margin		
-		
-		move = self.nextpos.tolist()
-		self.rect.center = move[0]
-		
-		self.speed = self.speed * Frict
-		if self.speed <= 0.8:
+	def slowDownDueToTABLE_FRICTIONion(self):
+		self.speed *= TABLE_FRICTION
+			
+	def stopIfSlowEnough(self, threshold):
+		if self.speed <= threshold:
 			self.speed = 0
 		
 	def _move(self, dirxy):
-		"Update position of the ball"
-		#currpos = self.rect.move((self.move, 0))
-		currpos = np.matrix(self.rect.center)
+		'''Update position of the ball
+		'''
+		currentPosition = np.matrix(self.rect.center)
 		xymat = np.matrix(dirxy)
-		self.nextpos = currpos + xymat * self.speed
-		#walls = (Wallwidth, Wallwidth)
-		if self.nextpos[0, 0] > self.pitch.left and \
-		self.nextpos[0, 0] < self.pitch.right and \
-		self.nextpos[0, 1] > self.pitch.top and \
-		self.nextpos[0, 1] < self.pitch.bottom:
-			move = self.nextpos.tolist()
+		self.nextPosition = currentPosition + xymat * self.speed
+		if not self.hasGoneOffField():
+			move = self.nextPosition.tolist()
 			self.rect.center = move[0]
 			
 	def _bounce(self, xymat = np.matrix((1, 1))):
-		"Update position of the ball"
-		#currpos = self.rect.move((self.move, 0))
-		currpos = np.matrix(self.rect.center)
+		'''Update position of the ball
+		'''
+		self.getNextPosition(xymat*self.speed)
 		
-		self.nextpos = currpos + xymat * self.speed
-		if self.nextpos[0, 0] < self.pitch.left or \
-		self.nextpos[0, 0] > self.pitch.right:
-			xymat[0, 0] = xymat[0, 0] * -1 
-		if self.nextpos[0, 1] < self.pitch.top or \
-		self.nextpos[0, 1] > self.pitch.bottom:
-			xymat[0, 1] = xymat[0, 1] * -1
-		self.nextpos = currpos + xymat * self.speed	
-		move = self.nextpos.tolist()
+		if self.hasGoneOffFieldSide():
+			xymat[0, 0] *= -1 
+		if self.hasGoneOffFieldTopOrBottom():
+			xymat[0, 1] *= -1
+			
+		self.getNextPosition(xymat*self.speed)	
+		move = self.nextPosition.tolist()
 		self.rect.center = move[0]
 		
-	def _push(self, sp, theta):
-		"Updates position of the ball given speed and orientation"
-		self.speed = sp
+	def _push(self, speed, theta):
+		'''Updates position of the ball given speed and orientation
+		'''
+		self.speed = speed
 		self.orientation = theta
 		
 
@@ -305,15 +310,15 @@ class Ball(pygame.sprite.Sprite):
 #
 #	def _move(self, dirxy):
 #		"Update position of the ball"
-#		#currpos = self.rect.move((self.move, 0))
-#		currpos = np.matrix(self.rect.center)
+#		#currentPosition = self.rect.move((self.move, 0))
+#		currentPosition = np.matrix(self.rect.center)
 #		xymat = np.matrix(dirxy)
-#		nextpos = currpos + xymat * self.speed
-#		if nextpos[0, 0] > self.area.left and \
-#		nextpos[0, 0] < self.area.right and \
-#		nextpos[0, 1] > self.area.top and \
-#		nextpos[0, 1] < self.area.bottom:
-#			move = nextpos.tolist()
+#		nextPosition = currentPosition + xymat * self.speed
+#		if nextPosition[0, 0] > self.area.left and \
+#		nextPosition[0, 0] < self.area.right and \
+#		nextPosition[0, 1] > self.area.top and \
+#		nextPosition[0, 1] < self.area.bottom:
+#			move = nextPosition.tolist()
 #			self.rect.center = move[0]
 #
 #	def _dying(self):
@@ -345,33 +350,28 @@ class Ball(pygame.sprite.Sprite):
 
 
 #  fpsClock = pygame.time.Clock()
-
-
-
-def main():
-	"""this function is called when the program starts. It initializes everything it needs, then runs in a loop until the function returns."""
-
-	# Initialize Everything
+def initializeEverything():
 	pygame.init()
 	screen = pygame.display.set_mode((Res), 0)
-	pygame.display.set_caption('Foosball Match')
+	pygame.display.set_caption(TITLE_TEXT)
 	pygame.mouse.set_visible(1)
-
-	# self.gamestate = 1  # 1 - run, 0 - exit
-
-	# Create Background
-	#TODO Implement Full (Tiled/Object) Background
+	return screen
+	
+def drawBackground(screen):
 	background = pygame.Surface(screen.get_size())
 	background = background.convert()
 	background.fill(WALL)
-	outlinebox = pygame.Rect(Wallwidth, Wallwidth, Pitch[0] - 2*Wallwidth, Pitch[1] - 2*Wallwidth)
-	pitchbox = pygame.Rect(Edge, Edge, Pitch[0] - 2*Edge, Pitch[1] - 2*Edge)
-	titlebox = pygame.Rect(0, Pitch[1], Xres, Yres)
-	line1box = pygame.Rect(Pitch[0]*1/4-Linewidth/2, Wallwidth, Linewidth, Pitch[1]-2*Wallwidth)
-	line2box = pygame.Rect(Pitch[0]*2/4-Linewidth/2, Wallwidth, Linewidth, Pitch[1]-2*Wallwidth)
-	line3box = pygame.Rect(Pitch[0]*3/4-Linewidth/2, Wallwidth, Linewidth, Pitch[1]-2*Wallwidth)
-	goalyellow=pygame.Rect(Wallwidth/2, Pitch[1]/2 - Goalwidth/2, Goaldepth, Goalwidth)
-	goalblue=pygame.Rect(Pitch[0] - Wallwidth, Pitch[1]/2 - Goalwidth/2, Goaldepth, Goalwidth)
+	return background
+
+def drawPitch(background):
+	outlinebox = pygame.Rect(WALL_WIDTH, WALL_WIDTH, PITCH[0] - 2*WALL_WIDTH, PITCH[1] - 2*WALL_WIDTH)
+	pitchbox = pygame.Rect(Edge, Edge, PITCH[0] - 2*Edge, PITCH[1] - 2*Edge)
+	titlebox = pygame.Rect(0, PITCH[1], Xres, Yres)
+	line1box = pygame.Rect(PITCH[0]*1/4-Linewidth/2, WALL_WIDTH, Linewidth, PITCH[1]-2*WALL_WIDTH)
+	line2box = pygame.Rect(PITCH[0]*2/4-Linewidth/2, WALL_WIDTH, Linewidth, PITCH[1]-2*WALL_WIDTH)
+	line3box = pygame.Rect(PITCH[0]*3/4-Linewidth/2, WALL_WIDTH, Linewidth, PITCH[1]-2*WALL_WIDTH)
+	goalyellow=pygame.Rect(WALL_WIDTH/2, PITCH[1]/2 - Goalwidth/2, Goaldepth, Goalwidth)
+	goalblue=pygame.Rect(PITCH[0] - WALL_WIDTH, PITCH[1]/2 - Goalwidth/2, Goaldepth, Goalwidth)
 
 	pygame.draw.rect(background, TAPE, outlinebox, 0)
 	pygame.draw.rect(background, GRASS, pitchbox, 0)
@@ -381,22 +381,48 @@ def main():
 	pygame.draw.rect(background, TAPE, line3box, 0)
 	pygame.draw.rect(background, YELLOW, goalyellow, 0)
 	pygame.draw.rect(background, BLUE, goalblue, 0)
-	pygame.draw.line(background, LINE, (Pitch[0]*1/4, Wallwidth), (Pitch[0]*1/4, Pitch[1]-Wallwidth))
-	pygame.draw.line(background, LINE, (Pitch[0]*2/4, Wallwidth), (Pitch[0]*2/4, Pitch[1]-Wallwidth))
-	pygame.draw.line(background, LINE, (Pitch[0]*3/4, Wallwidth), (Pitch[0]*3/4, Pitch[1]-Wallwidth))
+	pygame.draw.line(background, LINE, (PITCH[0]*1/4, WALL_WIDTH), (PITCH[0]*1/4, PITCH[1]-WALL_WIDTH))
+	pygame.draw.line(background, LINE, (PITCH[0]*2/4, WALL_WIDTH), (PITCH[0]*2/4, PITCH[1]-WALL_WIDTH))
+	pygame.draw.line(background, LINE, (PITCH[0]*3/4, WALL_WIDTH), (PITCH[0]*3/4, PITCH[1]-WALL_WIDTH))
 
-	#pygame.draw.circle(background, ORANGE, (Center[0], Center[1]), Ballsize/2, 0)
-		
-	#Put Text On The Background, Centered
+def centreTitleOnBackground(background):
 	if pygame.font:
 		font = pygame.font.Font(None, Fntsize)
-		text = font.render("Foosball Match", 1, TITLE)
+		text = font.render(TITLE_TEXT, 1, TITLE)
 		textpos = text.get_rect(centerx=Xres/2, centery=Yres - Fntsize/2)
 		background.blit(text, textpos)
 
-	#Display The Background
+def showFeatureOnScreen(screen, name, x, fr=None):
+	''' Show current frame on screen 
+	'''
+	myfont = pygame.font.SysFont("monospace", 15)
+	if fr != None:
+		text = myfont.render(name + ':' + str(fr), 1, (255, 255, 0))
+		screen.blit(text, (x * 15, PITCH[1] - WALL_WIDTH + 10))
+	else:
+		text = myfont.render(name, 1, (255, 255, 0))
+		screen.blit(text, (x * 15, PITCH[1] - WALL_WIDTH + 10))
+		
+def updateFeaturesOnScreen(screen, frame, ball):
+	showFeatureOnScreen(screen, 'Frame', 5, "%02d" % frame)
+	showFeatureOnScreen(screen, 'Pos', 15, ball.rect.center)
+	showFeatureOnScreen(screen, 'Speed', 25, np.around(ball.speed, 3))
+	showFeatureOnScreen(screen, 'Theta', 35, np.around(ball.orientation, 2))
+
+def drawEverything(screen, background, ballSprite):
 	screen.blit(background, (0, 0))
-	pygame.display.flip()
+	ballSprite.draw(screen)
+	
+def main():
+	"""this function is called when the program starts. It initializes everything it needs, then runs in a loop until the function returns."""
+
+	screen = initializeEverything()
+	# self.gamestate = 1  # 1 - run, 0 - exit
+	#TODO Implement Full (Tiled/Object) Background
+	background = drawBackground(screen)
+	drawPitch(background)
+	#pygame.draw.circle(background, ORANGE, (CENTRE[0], CENTRE[1]), BALL_SIZE/2, 0)
+	centreTitleOnBackground(background)
 
 #Prepare Game Objects
 	clock = pygame.time.Clock()
@@ -405,7 +431,7 @@ def main():
 	#rock2 = Rock((200, 200))
 	#blob = Blob()
 	ball = Ball()
-	ballsprite = pygame.sprite.RenderPlain(ball)
+	ballSprite = pygame.sprite.RenderPlain(ball)
 	#herosprite = pygame.sprite.RenderPlain((hero))
 	#rocksprite = pygame.sprite.RenderPlain(rock1, rock2)
 	#allsprites = pygame.sprite.RenderPlain((hero, rock, tree, gem, blob))
@@ -450,7 +476,7 @@ def main():
 	#self.boyspeed = 1
 	#self.boywait = 4
 	#self.boyxoff, boyyoff = boyImg.get_size()
-	#self.bmrg = 10				# Boy Margin on edge of screen
+	#self.bmrg = 10				# Boy MARGIN on edge of screen
 
 
 	# Randomizing Gem & Tree locations
@@ -477,24 +503,17 @@ def main():
 
 	#self.loop()
 
-	def fpsshow(name, x, fr=None):
-		''' Show current frame on screen '''
-		myfont = pygame.font.SysFont("monospace", 15)
-		if fr != None:
-			text = myfont.render(name + ':' + str(fr), 1, (255, 255, 0))
-			screen.blit(text, (x * 15, Pitch[1] - Wallwidth + 10))
-		else:
-			text = myfont.render(name, 1, (255, 255, 0))
-			screen.blit(text, (x * 15, Pitch[1] - Wallwidth + 10))
-
 	#def game_exit(self):
 		#exit()
 	dirxy = [0, 0]
-	once = 1
-	bnc = 0
-	mv = 0
-	psh = 1
+	bounce = 0
+	move = 0
+	push = 1
 	going = True
+
+	pushSpeed = np.random.randint(10, 26)
+	pushOrient = np.random.randint(0, 360)
+		
 	while going:			# Main game loop
 		clock.tick(60)
 		## GEMS UPDATE
@@ -530,7 +549,7 @@ def main():
 #				if keys[K_DOWN]:
 #					dirxy[1] = dirxy[1] + 1
 					
-		#if ball.nextpos 
+		#if ball.nextPosition 
 
 		#self.surface.blit(boyImg, (boyx, boyy))
 	#
@@ -621,27 +640,17 @@ def main():
 		
 		#herosprite.update(dirxy)
 		#rocksprite.update()
-		if once == 1:
-			once = 0
-			pushspeed = np.random.randint(10, 26)
-			pushorient = np.random.randint(0, 360)	
 
-		ballsprite.update(dirxy, pushspeed, pushorient, bnc, mv, psh)
-		
-		if psh == 1:
-			psh = 0
+		ballSprite.update(dirxy, pushSpeed, pushOrient, bounce, move, push)
+		push = 0
 		
 		#Draw Everything
-		screen.blit(background, (0, 0))
-		ballsprite.draw(screen)
+		drawEverything(screen, background, ballSprite)
 		#rocksprite.draw(screen)
 		#herosprite.draw(screen)
 		
 		frame += 1
-		fpsshow('Frame', 5, "%02d" % frame)
-		fpsshow('Pos', 15, ball.rect.center)
-		fpsshow('Speed', 25, np.around(ball.speed, 3))
-		fpsshow('Theta', 35, np.around(ball.orientation, 2))
+		updateFeaturesOnScreen(screen, frame, ball)
 
 		if frame == 30:
 			frame = 0		
