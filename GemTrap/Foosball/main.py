@@ -160,12 +160,12 @@ class Ball(pygame.sprite.Sprite):
 			
 		self.getNextPosition(xymod)	
 		if self.hasHitWall():
-			self.moveBallWithinPitch()
+			self.moveBallToBeWithinPitch()
 				
 		move = self.nextPosition.tolist()
 		self.rect.center = move[0]
 		
-		self.slowDownDueToTABLE_FRICTIONion()
+		self.slowDownDueToTableFriction()
 		self.stopIfSlowEnough(0.8)
 
 	def changeDirectionSlightlyAfterNSteps(self, steps):
@@ -200,7 +200,7 @@ class Ball(pygame.sprite.Sprite):
 		return self.hasGoneOffField()
 	
 	def hasGoneOffField(self):
-		return self.hasGoneOffFieldSide() or self.hasGoneOffFieldTopOrBottom()
+		return self.hasGoneOffFieldSide() or self.hasGoneOffFieldEnd()
 	
 	def hasGoneOffFieldSide(self):
 		return self.hasGoneOffFieldLeft() or self.hasGoneOffFieldRight()
@@ -211,7 +211,7 @@ class Ball(pygame.sprite.Sprite):
 	def hasGoneOffFieldRight(self):
 		return self.nextPosition[0, 0] > self.pitch.right
 	
-	def hasGoneOffFieldTopOrBottom(self):
+	def hasGoneOffFieldEnd(self):
 		return self.hasGoneOffFieldTop() or self.hasGoneOffFieldBottom()
 	
 	def hasGoneOffFieldTop(self):
@@ -219,18 +219,19 @@ class Ball(pygame.sprite.Sprite):
 	
 	def hasGoneOffFieldBottom(self):	
 		return self.nextPosition[0, 1] > self.pitch.bottom
-
+	
 	def bounceOffWall(self, xy):
 		if self.hasGoneOffFieldSide():
 			self.orientation = 360 - self.orientation
-		elif self.hasGoneOffFieldTopOrBottom():
+		elif self.hasGoneOffFieldEnd():
 			if xy[0] == 1:
 				self.orientation = 180 - self.orientation
 			elif xy[0] == -1:
 				self.orientation = 540 - self.orientation
+		self.slowDownDueToCollisionFriction()
 		self.speed *= COLLISION_FRICTION
 		
-	def moveBallWithinPitch(self):
+	def moveBallToBeWithinPitch(self):
 		if self.hasGoneOffFieldLeft():
 			self.nextPosition[0, 0] = self.pitch.left + MARGIN
 		elif self.hasGoneOffFieldRight():
@@ -240,9 +241,16 @@ class Ball(pygame.sprite.Sprite):
 		elif self.hasGoneOffFieldBottom():
 			self.nextPosition[0, 1] = self.pitch.bottom - MARGIN
 			
-	def slowDownDueToTABLE_FRICTIONion(self):
-		self.speed *= TABLE_FRICTION
-			
+	
+	def slowDownDueToTableFriction(self):
+		self.slowDownDueToFriction(TABLE_FRICTION)
+		
+	def slowDownDueToCollisionFriction(self):
+		self.slowDownDueToFriction(COLLISION_FRICTION)
+		
+	def slowDownDueToFriction(self, friction):
+		self.speed *= friction
+				
 	def stopIfSlowEnough(self, threshold):
 		if self.speed <= threshold:
 			self.speed = 0
@@ -264,7 +272,7 @@ class Ball(pygame.sprite.Sprite):
 		
 		if self.hasGoneOffFieldSide():
 			xymat[0, 0] *= -1 
-		if self.hasGoneOffFieldTopOrBottom():
+		if self.hasGoneOffFieldEnd():
 			xymat[0, 1] *= -1
 			
 		self.getNextPosition(xymat*self.speed)	
@@ -346,7 +354,9 @@ def drawEverything(screen, background, ballSprite):
 	ballSprite.draw(screen)
 	
 def main():
-	"""this function is called when the program starts. It initializes everything it needs, then runs in a loop until the function returns."""
+	"""this function is called when the program starts. It initializes 
+	everything it needs, then runs in a loop until the function returns.
+	"""
 
 	screen = initializeEverything()
 
