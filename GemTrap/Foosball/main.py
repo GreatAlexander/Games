@@ -40,8 +40,11 @@ def main():
 	push = 1
 	going = True
 
-	pushSpeed = np.random.randint(10, 26)
+#	pushSpeed = np.random.randint(10, 26)
+#	pushOrient = np.random.randint(0, 360)
+	pushSpeed = 15
 	pushOrient = np.random.randint(0, 360)
+
 		
 	while going:			# Main game loop
 		clock.tick(60)
