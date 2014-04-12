@@ -2,8 +2,9 @@ import pygame
 import numpy as np
 from Global import *
 from Loader import load_image
+import Agent
 
-class Ball(pygame.sprite.Sprite):
+class Ball(Agent.Agent):
     """Sprite for ball on the pitch"""
     def __init__(self, posx = CENTRE[0]-BALL_RADIUS, posy = CENTRE[1]-BALL_RADIUS):
         pygame.sprite.Sprite.__init__(self) #call Sprite initializer
@@ -35,7 +36,7 @@ class Ball(pygame.sprite.Sprite):
             self._move(dirxy)
         elif push == 1:
             self._push(pushSpeed, pushOrient)
-												
+            
         self._updatePosition()
         
 #    def calcangle(oldpos, newpos):
