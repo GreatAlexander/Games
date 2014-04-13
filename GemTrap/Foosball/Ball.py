@@ -91,7 +91,7 @@ class Ball(MovingObject.MovingObject):
         
     def _updatePosition(self):
         "Update speed and position of ball."
-        self.changeDirectionSlightlyAfterNSteps(60)
+        self.changeDirectionSlightlyAfterNSteps(1)
         xymod, xy = self.computeDynamics()
         
         self.getNextPosition(xymod)    
@@ -112,18 +112,18 @@ class Ball(MovingObject.MovingObject):
             self.orientation +=  np.random.normal(0, 1)
     
     def computeDynamics(self):
+        self.orientation %= 360
         angle = self.orientation % 90
         if self.orientation >= 0 and self.orientation < 90 or self.orientation >= 180 and self.orientation < 270:
             xmod = self.speed * np.sin(np.deg2rad(angle))
             ymod = self.speed * np.cos(np.deg2rad(angle))
-        if self.orientation >= 90 and self.orientation < 180 or self.orientation >= 270 and self.orientation <= 360:
+        elif self.orientation >= 90 and self.orientation < 180 or self.orientation >= 270 and self.orientation <= 360:
             xmod = self.speed * np.cos(np.deg2rad(angle))
             ymod = self.speed * np.sin(np.deg2rad(angle))
         xy = self.getXY()
         return np.matrix((xmod*xy[0], ymod*xy[1])), xy
     
     def getXY(self):
-        self.orientation %= 360
         if self.orientation >= 0 and self.orientation < 90:
             return [1, -1]
         elif self.orientation >= 90 and self.orientation < 180:
