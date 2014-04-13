@@ -1,57 +1,93 @@
 import pygame
 import numpy as np
 from Global import *
-from Loader import load_image
-import Agent
+import Loader
+import MovingObject
 
-class Ball(Agent.Agent):
+class Ball(MovingObject.MovingObject):
     """Sprite for ball on the pitch"""
-    def __init__(self, posx = CENTRE[0]-BALL_RADIUS, posy = CENTRE[1]-BALL_RADIUS):
-        pygame.sprite.Sprite.__init__(self) #call Sprite initializer
-        #self.image = pygame.Surface([BALL_SIZE, BALL_SIZE])
-        #self.image.fill(ORANGE)
-        self.image, self.rect = load_image('ball.png', -1)
-        self.image = pygame.transform.scale(self.image, (25, 25))
-        #self.rect = self.image.get_rect()
+    def __init__(self, posx = CENTRE[0]-BALL_RADIUS, 
+                 posy = CENTRE[1]-BALL_RADIUS, bounceValue=0, 
+                 pushValue=0, moveValue=0, pushSpeed = 0, pushOrientation = 0,
+                 dirXY = [0,0]):
         
-        #screen = pygame.display.get_surface()
-        #self.area = screen.get_rect()
+        MovingObject.MovingObject.__init__(self)
+        self.load_image()
+        
+        self.setBounceValue(bounceValue)
+        self.setPushValue(pushValue)
+        self.setMoveValue(moveValue)
+        self.setPushSpeed(pushSpeed)
+        self.setPushOrientation(pushOrientation)
+        self.setDirXY(dirXY)
         self.pitch = pygame.Rect(WALL_WIDTH, WALL_WIDTH, Field[0], Field[1])
         self.pitch.center = CENTRE
-        #self.area = (PITCH[0], PITCH[1])
 
         self.rect.topleft = (posx, posy)
-        self.speed = 0
-        self.orientation = 0
-        self.count = 0
-        #self.touching = 0
 
+    def setBounceValue(self, bounceValue):
+        self.bounceValue = bounceValue 
     
-    def update(self, dirxy, pushSpeed, pushOrient, bounce = 0, move = 0, push = 0):
+    def setPushValue(self, pushValue):
+        self.pushValue = pushValue
+
+    def setMoveValue(self, moveValue):
+        self.moveValue = moveValue
+
+    def setPushSpeed(self, pushSpeed):
+        self.pushSpeed = pushSpeed
+    
+    def setPushOrientation(self, pushOrientation):
+        self.pushOrientation = pushOrientation
+    
+    def setDirXY(self, dirXY):
+        self.dirXY = dirXY
+        
+    def load_image(self):
+        self.image, self.rect = Loader.load_image('ball.png', -1)
+        self.image = pygame.transform.scale(self.image, (25, 25))
+        
+    def update(self):
         '''Update ball position.
         '''
-        if bounce == 1:
+        if self.bounceValue == 1:
             self._bounce()
-        elif move == 1:
-            self._move(dirxy)
-        elif push == 1:
-            self._push(pushSpeed, pushOrient)
+        elif self.moveValue == 1:
+            self._move()
+        elif self.pushValue == 1:
+            self._push()
             
         self._updatePosition()
         
-#    def calcangle(oldpos, newpos):
-#        "Calculate angle from 2 x,y cordinates"
-#        xneg = 0
-#        yneg = 0
-#        xdif = oldpos[0] - newpos [0]        
-#        ydif = oldpos[1] - newpos[1]
-#        
-#        if xdif < 0:
-#            xneg = 1
-#            xdif = abs(xdif)
-#        if ydif < 0:
-#            yneg = 1
-#            ydif = abs(ydif)                
+    def _bounce(self, xymat = np.matrix((1, 1))):
+        '''Update position of the ball
+        '''
+        self.getNextPosition(xymat*self.speed)
+        
+        if self.hasGoneOffFieldSide():
+            xymat[0, 0] *= -1 
+        if self.hasGoneOffFieldEnd():
+            xymat[0, 1] *= -1
+            
+        self.getNextPosition(xymat*self.speed)    
+        move = self.nextPosition.tolist()
+        self.rect.center = move[0]
+       
+    def _move(self):
+        '''Update position of the ball
+        '''
+        currentPosition = np.matrix(self.rect.center)
+        xymat = np.matrix(self.dirXY)
+        self.nextPosition = currentPosition + xymat * self.speed
+        if not self.hasGoneOffField():
+            move = self.nextPosition.tolist()
+            self.rect.center = move[0]
+        
+    def _push(self):
+        '''Updates position of the ball given speed and orientation
+        '''
+        self.setSpeed(self.pushSpeed)
+        self.setOrientation(self.pushOrientation)           
         
     def _updatePosition(self):
         "Update speed and position of ball."
@@ -70,9 +106,9 @@ class Ball(Agent.Agent):
         self.stopIfSlowEnough(0.8)
 
     def changeDirectionSlightlyAfterNSteps(self, steps):
-        self.count += 1
-        if self.count >= steps  and self.speed != 0:
-            self.count = 0
+        self.frameCount += 1
+        if self.frameCount >= steps  and self.speed != 0:
+            self.frameCount = 0
             self.orientation +=  np.random.normal(0, 1)
     
     def computeDynamics(self):
@@ -159,33 +195,32 @@ class Ball(Agent.Agent):
     def stopIfSlowEnough(self, threshold):
         if self.speed <= threshold:
             self.speed = 0
-        
-    def _move(self, dirxy):
-        '''Update position of the ball
-        '''
-        currentPosition = np.matrix(self.rect.center)
-        xymat = np.matrix(dirxy)
-        self.nextPosition = currentPosition + xymat * self.speed
-        if not self.hasGoneOffField():
-            move = self.nextPosition.tolist()
-            self.rect.center = move[0]
-            
-    def _bounce(self, xymat = np.matrix((1, 1))):
-        '''Update position of the ball
-        '''
-        self.getNextPosition(xymat*self.speed)
-        
-        if self.hasGoneOffFieldSide():
-            xymat[0, 0] *= -1 
-        if self.hasGoneOffFieldEnd():
-            xymat[0, 1] *= -1
-            
-        self.getNextPosition(xymat*self.speed)    
-        move = self.nextPosition.tolist()
-        self.rect.center = move[0]
-        
-    def _push(self, speed, theta):
-        '''Updates position of the ball given speed and orientation
-        '''
-        self.speed = speed
-        self.orientation = theta
+    
+    
+
+
+    
+    
+    
+    
+    
+                    
+#    def calcangle(oldpos, newpos):
+#        "Calculate angle from 2 x,y cordinates"
+#        xneg = 0
+#        yneg = 0
+#        xdif = oldpos[0] - newpos [0]        
+#        ydif = oldpos[1] - newpos[1]
+#        
+#        if xdif < 0:
+#            xneg = 1
+#            xdif = abs(xdif)
+#        if ydif < 0:
+#            yneg = 1
+#            ydif = abs(ydif)     
+    
+    
+    
+    
+    
+    

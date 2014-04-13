@@ -22,41 +22,29 @@ def main():
 	#TODO Implement Full (Tiled/Object) Background
 	background = display.drawBackground()
 	display.drawPitch(background)
-	#pygame.draw.circle(background, ORANGE, (CENTRE[0], CENTRE[1]), BALL_SIZE/2, 0)
 	display.centreTitleOnBackground(background)
 
 	# Prepare Game Objects
 	clock = pygame.time.Clock()
-
-	ball = Ball()
+	ball = Ball(pushValue = 1, pushSpeed = 15, 
+			pushOrientation = np.random.randint(0, 360), dirXY = [0, 0])
+	
 	ballSprite = pygame.sprite.RenderPlain(ball)
 
-
-	frame = 0				# Current Frame
-
-	dirxy = [0, 0]
-	bounce = 0
-	move = 0
-	push = 1
+	frame = 0
 	going = True
-
-#	pushSpeed = np.random.randint(10, 26)
-#	pushOrient = np.random.randint(0, 360)
-	pushSpeed = 15
-	pushOrient = np.random.randint(0, 360)
-
-		
-	while going:			# Main game loop
+	
+	# Main game loop
+	while going:			
 		clock.tick(60)
-
-
-		ballSprite.update(dirxy, pushSpeed, pushOrient, bounce, move, push)
-		push = 0
+		
+		#Update Everything
+		ballSprite.update()
+		ball.pushValue = 0
+		frame += 1
 		
 		#Draw Everything
 		display.drawEverything(background, ballSprite)
-		
-		frame += 1
 		display.updateFeaturesOnScreen(frame, ball)
 
 		if frame == 30:

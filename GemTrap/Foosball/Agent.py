@@ -1,6 +1,6 @@
-import pygame
+import MovingObject
 
-class Agent(pygame.sprite.Sprite):
+class Agent(MovingObject.MovingObject):
     pass
 
 
