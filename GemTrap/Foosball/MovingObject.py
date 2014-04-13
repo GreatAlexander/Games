@@ -2,7 +2,7 @@ import pygame
 
 class MovingObject(pygame.sprite.Sprite):
     
-    def __init__(self, name="name", speed=0, orientation=0, frameCount=0):
+    def __init__(self, name="", speed=0, orientation=0, frameCount=0):
         pygame.sprite.Sprite.__init__(self)
         self.setName(name)
         self.setSpeed(speed)
