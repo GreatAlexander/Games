@@ -147,19 +147,19 @@ class Ball(MovingObject.MovingObject):
         return self.hasGoneOffFieldLeft() or self.hasGoneOffFieldRight()
     
     def hasGoneOffFieldLeft(self):
-        return self.nextPosition[0, 0] < self.pitch.left
+        return self.nextPosition[0, 0] < self.pitch.left + MARGIN
         
     def hasGoneOffFieldRight(self):
-        return self.nextPosition[0, 0] > self.pitch.right
+        return self.nextPosition[0, 0] > self.pitch.right - MARGIN + BALL_SIZE
     
     def hasGoneOffFieldEnd(self):
         return self.hasGoneOffFieldTop() or self.hasGoneOffFieldBottom()
     
     def hasGoneOffFieldTop(self):
-        return self.nextPosition[0, 1] < self.pitch.top
+        return self.nextPosition[0, 1] < self.pitch.top + MARGIN
     
     def hasGoneOffFieldBottom(self):    
-        return self.nextPosition[0, 1] > self.pitch.bottom
+        return self.nextPosition[0, 1] > self.pitch.bottom - MARGIN + BALL_SIZE
     
     def bounceOffWall(self, xy):
         if self.hasGoneOffFieldSide():
@@ -176,11 +176,11 @@ class Ball(MovingObject.MovingObject):
         if self.hasGoneOffFieldLeft():
             self.nextPosition[0, 0] = self.pitch.left + MARGIN
         elif self.hasGoneOffFieldRight():
-            self.nextPosition[0, 0] = self.pitch.right - MARGIN
+            self.nextPosition[0, 0] = self.pitch.right - MARGIN + BALL_SIZE
         elif self.hasGoneOffFieldTop():
             self.nextPosition[0, 1] = self.pitch.top + MARGIN
         elif self.hasGoneOffFieldBottom():
-            self.nextPosition[0, 1] = self.pitch.bottom - MARGIN
+            self.nextPosition[0, 1] = self.pitch.bottom - MARGIN + BALL_SIZE
             
     
     def slowDownDueToTableFriction(self):

@@ -37,6 +37,6 @@ BLUE = (0, 0, 255)
 ORANGE = (255, 140, 0)
 TABLE_FRICTION = 1
 COLLISION_FRICTION = 1           # Collision TABLE_FRICTION
-MARGIN = 1
+MARGIN = Tapewidth / 2
 
 TITLE_TEXT = 'Foosball Match'
