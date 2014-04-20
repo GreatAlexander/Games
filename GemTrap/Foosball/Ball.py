@@ -20,7 +20,7 @@ class Ball(MovingObject.MovingObject):
         self.setPushSpeed(pushSpeed)
         self.setPushOrientation(pushOrientation)
         self.setDirXY(dirXY)
-        self.pitch = pygame.Rect(WALL_WIDTH, WALL_WIDTH, Field[0], Field[1])
+        self.pitch = pygame.Rect(WALL_WIDTH, WALL_WIDTH, FIELD[0], FIELD[1])
         self.pitch.center = CENTRE
 
         self.rect.topleft = (posx, posy)
@@ -109,7 +109,7 @@ class Ball(MovingObject.MovingObject):
         self.frameCount += 1
         if self.frameCount >= steps  and self.speed != 0:
             self.frameCount = 0
-            self.orientation +=  np.random.normal(0, 1)
+            self.orientation +=  RANDOM_DEVIATION * np.random.normal(0, 1)
     
     def computeDynamics(self):
         self.orientation %= 360

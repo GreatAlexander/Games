@@ -21,13 +21,13 @@ class Display(object):
     
     def drawPitch(self, background):
         outlinebox = pygame.Rect(WALL_WIDTH, WALL_WIDTH, PITCH[0] - 2*WALL_WIDTH, PITCH[1] - 2*WALL_WIDTH)
-        pitchbox = pygame.Rect(Edge, Edge, PITCH[0] - 2*Edge, PITCH[1] - 2*Edge)
+        pitchbox = pygame.Rect(EDGE, EDGE, PITCH[0] - 2*EDGE, PITCH[1] - 2*EDGE)
         titlebox = pygame.Rect(0, PITCH[1], Xres, Yres)
-        line1box = pygame.Rect(PITCH[0]*1/4-Linewidth/2, WALL_WIDTH, Linewidth, PITCH[1]-2*WALL_WIDTH)
-        line2box = pygame.Rect(PITCH[0]*2/4-Linewidth/2, WALL_WIDTH, Linewidth, PITCH[1]-2*WALL_WIDTH)
-        line3box = pygame.Rect(PITCH[0]*3/4-Linewidth/2, WALL_WIDTH, Linewidth, PITCH[1]-2*WALL_WIDTH)
-        goalyellow=pygame.Rect(WALL_WIDTH/2, PITCH[1]/2 - Goalwidth/2, Goaldepth, Goalwidth)
-        goalblue=pygame.Rect(PITCH[0] - WALL_WIDTH, PITCH[1]/2 - Goalwidth/2, Goaldepth, Goalwidth)
+        line1box = pygame.Rect(PITCH[0]*1/4-LINE_WIDTH/2, WALL_WIDTH, LINE_WIDTH, PITCH[1]-2*WALL_WIDTH)
+        line2box = pygame.Rect(PITCH[0]*2/4-LINE_WIDTH/2, WALL_WIDTH, LINE_WIDTH, PITCH[1]-2*WALL_WIDTH)
+        line3box = pygame.Rect(PITCH[0]*3/4-LINE_WIDTH/2, WALL_WIDTH, LINE_WIDTH, PITCH[1]-2*WALL_WIDTH)
+        goalyellow=pygame.Rect(WALL_WIDTH/2, PITCH[1]/2 - GOAL_WIDTH/2, Goaldepth, GOAL_WIDTH)
+        goalblue=pygame.Rect(PITCH[0] - WALL_WIDTH, PITCH[1]/2 - GOAL_WIDTH/2, Goaldepth, GOAL_WIDTH)
     
         pygame.draw.rect(background, TAPE, outlinebox, 0)
         pygame.draw.rect(background, GRASS, pitchbox, 0)
@@ -43,9 +43,9 @@ class Display(object):
     
     def centreTitleOnBackground(self, background):
         if pygame.font:
-            font = pygame.font.Font(None, Fntsize)
+            font = pygame.font.Font(None, FONT_SIZE)
             text = font.render(TITLE_TEXT, 1, TITLE)
-            textpos = text.get_rect(centerx=Xres/2, centery=Yres - Fntsize/2)
+            textpos = text.get_rect(centerx=Xres/2, centery=Yres - FONT_SIZE/2)
             background.blit(text, textpos)
     
     def showFeatureOnScreen(self, name, x, fr=None):

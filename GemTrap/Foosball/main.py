@@ -3,7 +3,6 @@
 #==============================================================================
 # FOOSBALL - by Alejandro Bordallo and Andrew Robinson
 # Details: Foozball game sim for autonomous agents, simple ai, path planning
-# TODO: Fix the weird bouncing angles that came from refactoring
 #==============================================================================
 
 import pygame, sys
@@ -14,20 +13,18 @@ from Ball import Ball
 from Global import *
 	
 def main():
-	"""this function is called when the program starts. It initializes 
-	everything it needs, then runs in a loop until the function returns.
-	"""
+	"""This is the main function called when the program starts. It initializes 
+	everything it needs, then runs in a loop until exited. """
 
 	display = Display()
-	#TODO Implement Full (Tiled/Object) Background
+	
 	background = display.drawBackground()
 	display.drawPitch(background)
 	display.centreTitleOnBackground(background)
 
 	# Prepare Game Objects
 	clock = pygame.time.Clock()
-	ball = Ball(pushValue = 1, pushSpeed = 15, 
-			pushOrientation = np.random.randint(0, 360), dirXY = [0, 0])
+	ball = Ball()
 	
 	ballSprite = pygame.sprite.RenderPlain(ball)
 
@@ -40,7 +37,7 @@ def main():
 		
 		#Update Everything
 		ballSprite.update()
-		ball.pushValue = 0
+		ball.setPushValue(0)
 		frame += 1
 		
 		#Draw Everything
@@ -48,7 +45,12 @@ def main():
 		display.updateFeaturesOnScreen(frame, ball)
 
 		if frame == 30:
-			frame = 0		
+			frame = 0
+			
+		if ball.speed == 0:
+			ball.setPushValue(1)
+			ball.setPushOrientation(np.random.randint(0, 360))
+			ball.setPushSpeed(15)
 		
 		pygame.display.flip()
 		
