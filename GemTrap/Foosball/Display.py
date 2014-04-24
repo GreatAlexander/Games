@@ -65,6 +65,10 @@ class Display(object):
         self.showFeatureOnScreen('Speed', 25, np.around(ball.speed, 3))
         self.showFeatureOnScreen('Theta', 35, np.around(ball.orientation, 2))
     
-    def drawEverything(self, background, ballSprite):
+    def drawEverything(self, background, ballSprite, agent1Sprite, agent2Sprite):
         self.screen.blit(background, (0, 0))
         ballSprite.draw(self.screen)
+        if agent1Sprite:
+		agent1Sprite.draw(self.screen)
+        if agent2Sprite:
+		agent2Sprite.draw(self.screen)

@@ -9,6 +9,7 @@ import sys
 import numpy as np
 from Display import Display
 from Ball import Ball
+from Agent import Agent
 from Global import *
 	
 def main():
@@ -25,9 +26,16 @@ def main():
 #	clock = pygame.time.Clock()
 	clock = pygw.clock()
 	ball = Ball()
+	blue1 = Agent(BLUE1_START, 1)
+	red2 = Agent(RED2_START, 4)
+	
 	
 #	ballSprite = pygame.sprite.RenderPlain(ball)
 	ballSprite = pygw.renderplainsprite(ball)
+	blue1Sprite = pygw.renderplainsprite(blue1)
+#	blue2Sprite = pygw.renderplainsprite(blue2)
+#	red1Sprite = pygw.renderplainsprite(red1)
+	red2Sprite = pygw.renderplainsprite(red2)
 
 	frame = 0
 	going = True
@@ -38,11 +46,12 @@ def main():
 		
 		#Update Everything
 		ballSprite.update()
+		blue1Sprite.update()
 		ball.setPushValue(0)
 		frame += 1
 		
 		#Draw Everything
-		display.drawEverything(background, ballSprite)
+		display.drawEverything(background, ballSprite, blue1Sprite, red2Sprite)
 		display.updateFeaturesOnScreen(frame, ball)
 
 		if frame == 30:

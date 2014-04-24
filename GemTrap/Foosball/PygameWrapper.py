@@ -24,6 +24,10 @@ def transform(image, scale):
 	"""Resize Surface to new resolution"""
 	return pygame.transform.scale(image, scale)
 	
+def rotate(image, angle):
+	"""Counter-clockwise rotation of image in degrees"""
+	return pygame.transform.rotate(image, angle)
+	
 def clock():
 	return pygame.time.Clock()
 	
