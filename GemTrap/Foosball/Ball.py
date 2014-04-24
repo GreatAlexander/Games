@@ -6,8 +6,8 @@ import MovingObject
 
 class Ball(MovingObject.MovingObject):
     """Sprite for ball on the pitch"""
-    def __init__(self, posx = CENTRE[0]-BALL_RADIUS, 
-                 posy = CENTRE[1]-BALL_RADIUS, bounceValue=0, 
+    def __init__(self, posx = CENTRE[0], 
+                 posy = CENTRE[1], bounceValue=0, 
                  pushValue=0, moveValue=0, pushSpeed = 0, pushOrientation = 0,
                  dirXY = [0,0]):
         
@@ -24,7 +24,7 @@ class Ball(MovingObject.MovingObject):
         self.pitch = pygw.rectangle(WALL_WIDTH, WALL_WIDTH, FIELD[0], FIELD[1])
         self.pitch.center = CENTRE
 
-        self.rect.topleft = (posx, posy)
+        self.rect.center = (posx, posy)
 
     def setBounceValue(self, bounceValue):
         self.bounceValue = bounceValue 
