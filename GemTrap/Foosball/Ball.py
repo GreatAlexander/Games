@@ -1,4 +1,4 @@
-import pygame
+import PygameWrapper as pygw
 import numpy as np
 from Global import *
 import Loader
@@ -20,7 +20,8 @@ class Ball(MovingObject.MovingObject):
         self.setPushSpeed(pushSpeed)
         self.setPushOrientation(pushOrientation)
         self.setDirXY(dirXY)
-        self.pitch = pygame.Rect(WALL_WIDTH, WALL_WIDTH, FIELD[0], FIELD[1])
+#        self.pitch = pygame.Rect(WALL_WIDTH, WALL_WIDTH, FIELD[0], FIELD[1])
+        self.pitch = pygw.rectangle(WALL_WIDTH, WALL_WIDTH, FIELD[0], FIELD[1])
         self.pitch.center = CENTRE
 
         self.rect.topleft = (posx, posy)
@@ -45,7 +46,8 @@ class Ball(MovingObject.MovingObject):
         
     def load_image(self):
         self.image, self.rect = Loader.load_image('ball.png', -1)
-        self.image = pygame.transform.scale(self.image, (25, 25))
+#        self.image = pygame.transform.scale(self.image, (25, 25))
+        self.image = pygw.transform(self.image, (25,25))
         
     def update(self):
         '''Update ball position.
@@ -195,15 +197,7 @@ class Ball(MovingObject.MovingObject):
     def stopIfSlowEnough(self, threshold):
         if self.speed <= threshold:
             self.speed = 0
-    
-    
 
-
-    
-    
-    
-    
-    
                     
 #    def calcangle(oldpos, newpos):
 #        "Calculate angle from 2 x,y cordinates"

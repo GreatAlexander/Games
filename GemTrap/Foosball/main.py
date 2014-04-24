@@ -4,9 +4,8 @@
 # FOOSBALL - by Alejandro Bordallo and Andrew Robinson
 # Details: Foozball game sim for autonomous agents, simple ai, path planning
 #==============================================================================
-
-import pygame, sys
-from pygame.locals import *
+import PygameWrapper as pygw
+import sys
 import numpy as np
 from Display import Display
 from Ball import Ball
@@ -23,10 +22,12 @@ def main():
 	display.centreTitleOnBackground(background)
 
 	# Prepare Game Objects
-	clock = pygame.time.Clock()
+#	clock = pygame.time.Clock()
+	clock = pygw.clock()
 	ball = Ball()
 	
-	ballSprite = pygame.sprite.RenderPlain(ball)
+#	ballSprite = pygame.sprite.RenderPlain(ball)
+	ballSprite = pygw.renderplainsprite(ball)
 
 	frame = 0
 	going = True
@@ -52,14 +53,17 @@ def main():
 			ball.setPushOrientation(np.random.randint(0, 360))
 			ball.setPushSpeed(15)
 		
-		pygame.display.flip()
+#		pygame.display.flip()
+		pygw.updatefulldisplay()
 		
-		for event in pygame.event.get():
-			if event.type == QUIT or event.type == KEYDOWN and event.key == K_ESCAPE:
+#		for event in pygame.event.get():
+		for event in pygw.getIOevent():
+			if event.type == pygw.QUIT or event.type == pygw.KEYDOWN and event.key == pygw.K_ESCAPE:
 				going = False
 				print('User quit the game')
 
-	pygame.quit()
+#	pygame.quit()
+	pygw.quitgame()
 	sys.exit()
 
 if __name__ == '__main__':
