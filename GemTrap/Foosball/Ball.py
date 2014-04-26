@@ -25,6 +25,7 @@ class Ball(MovingObject.MovingObject):
         self.pitch.center = CENTRE
 
         self.rect.center = (posx, posy)
+        self.xybuff = np.matrix((0., 0.))
 
     def setBounceValue(self, bounceValue):
         self.bounceValue = bounceValue
@@ -91,9 +92,10 @@ class Ball(MovingObject.MovingObject):
 
     def _updatePosition(self):
         "Update speed and position of ball."
-        self.changeDirectionSlightlyAfterNSteps(30)
+#        self.changeDirectionSlightlyAfterNSteps(30)
+        xymod = np.matrix((0., 0.))
         xymod, xy = self.computeDynamics()
-
+        self.XYMOD = xymod
         self.getNextPosition(xymod)
         if self.hasHitWall():
             self.bounceOffWall(xy)
@@ -103,7 +105,7 @@ class Ball(MovingObject.MovingObject):
         self.rect.center = move[0]
 
         self.slowDownDueToTableFriction()
-        self.stopIfSlowEnough(0.8)
+        self.stopIfSlowEnough(0.1)
 
     def changeDirectionSlightlyAfterNSteps(self, steps):
         self.frameCount += 1
@@ -135,6 +137,20 @@ class Ball(MovingObject.MovingObject):
 
     def getNextPosition(self, xymod):
         currentPosition = np.matrix(self.rect.center)
+
+        if xymod[0,0] > -1 and xymod[0,0] < 1:
+            self.xybuff[0,0] += xymod[0,0]
+            xymod[0,0] = 0
+        if xymod[0,1] > -1 and xymod[0,1] < 1:
+            self.xybuff[0,1] += xymod[0,1]
+            xymod[0,1] = 0
+        if self.xybuff[0,0] < -1 or self.xybuff[0,0] > 1:
+            xymod[0,0] += self.xybuff[0,0]
+            self.xybuff[0,0] = 0
+        if self.xybuff[0,1] < -1 or self.xybuff[0,1] > 1:
+            xymod[0,1] += self.xybuff[0,1]
+            self.xybuff[0,1] = 0
+
         self.nextPosition = currentPosition + xymod
 
     def hasHitWall(self):

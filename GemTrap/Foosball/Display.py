@@ -61,10 +61,15 @@ class Display(object):
 	def updateFeaturesOnScreen(self, frame, ball, blue1, blue2, red1, red2):
 		self.showFeatureOnScreen('Ball Speed', 5, np.around(ball.speed, 2))
 		self.showFeatureOnScreen('Ball Angle', 20, np.around(ball.orientation, 2))
-		self.showFeatureOnScreen('Blue1', 35, np.around(blue1.position, 2))
-		self.showFeatureOnScreen('Blue2', 50, np.around(blue2.position, 2))
-		self.showFeatureOnScreen('Red1', 65, np.around(red1.position, 2))
-		self.showFeatureOnScreen('Red2', 80, np.around(red2.position, 2))
+		self.showFeatureOnScreen('XYMOD', 30, np.around(ball.XYMOD, 2))
+		self.showFeatureOnScreen('NextPos', 50, np.around(ball.nextPosition, 2))
+		self.showFeatureOnScreen('Buffer', 70, np.around(ball.xybuff, 2))
+
+
+#		self.showFeatureOnScreen('Blue1', 35, np.around(blue1.position, 2))
+#		self.showFeatureOnScreen('Blue2', 50, np.around(blue2.position, 2))
+#		self.showFeatureOnScreen('Red1', 65, np.around(red1.position, 2))
+#		self.showFeatureOnScreen('Red2', 80, np.around(red2.position, 2))
 
 
 	def drawEverything(self, background, ballSprite, agent1Sprite, agent2Sprite, agent3Sprite, agent4Sprite):
