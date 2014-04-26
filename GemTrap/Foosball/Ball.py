@@ -25,6 +25,7 @@ class Ball(MovingObject.MovingObject):
         self.pitch.center = CENTRE
 
         self.rect.center = (posx, posy)
+        self.center = (posx, posy)
         self.xybuff = np.matrix((0., 0.))
 
     def setBounceValue(self, bounceValue):
@@ -103,6 +104,7 @@ class Ball(MovingObject.MovingObject):
 
         move = self.nextPosition.tolist()
         self.rect.center = move[0]
+        self.center = move[0]
 
         self.slowDownDueToTableFriction()
         self.stopIfSlowEnough(0.1)
@@ -136,20 +138,22 @@ class Ball(MovingObject.MovingObject):
             return [-1, -1]
 
     def getNextPosition(self, xymod):
-        currentPosition = np.matrix(self.rect.center)
+        currentPosition = np.matrix(self.center)
 
-        if xymod[0,0] > -1 and xymod[0,0] < 1:
-            self.xybuff[0,0] += xymod[0,0]
-            xymod[0,0] = 0
-        if xymod[0,1] > -1 and xymod[0,1] < 1:
-            self.xybuff[0,1] += xymod[0,1]
-            xymod[0,1] = 0
-        if self.xybuff[0,0] < -1 or self.xybuff[0,0] > 1:
-            xymod[0,0] += self.xybuff[0,0]
-            self.xybuff[0,0] = 0
-        if self.xybuff[0,1] < -1 or self.xybuff[0,1] > 1:
-            xymod[0,1] += self.xybuff[0,1]
-            self.xybuff[0,1] = 0
+        #=======================================================================
+        # if xymod[0,0] > -1 and xymod[0,0] < 1:
+        #     self.xybuff[0,0] += xymod[0,0]
+        #     xymod[0,0] = 0
+        # if xymod[0,1] > -1 and xymod[0,1] < 1:
+        #     self.xybuff[0,1] += xymod[0,1]
+        #     xymod[0,1] = 0
+        # if self.xybuff[0,0] < -1 or self.xybuff[0,0] > 1:
+        #     xymod[0,0] += self.xybuff[0,0]
+        #     self.xybuff[0,0] = 0
+        # if self.xybuff[0,1] < -1 or self.xybuff[0,1] > 1:
+        #     xymod[0,1] += self.xybuff[0,1]
+        #     self.xybuff[0,1] = 0
+        #=======================================================================
 
         self.nextPosition = currentPosition + xymod
 
