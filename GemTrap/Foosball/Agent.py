@@ -1,5 +1,7 @@
+import Global
 import Loader
 import MovingObject
+import AI
 import PygameWrapper as pygw
 
 class Agent(MovingObject.MovingObject):
