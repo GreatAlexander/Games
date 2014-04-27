@@ -26,7 +26,6 @@ class Ball(MovingObject.MovingObject):
 
         self.rect.center = (posx, posy)
         self.center = (posx, posy)
-        self.xybuff = np.matrix((0., 0.))
 
     def setBounceValue(self, bounceValue):
         self.bounceValue = bounceValue
@@ -139,22 +138,6 @@ class Ball(MovingObject.MovingObject):
 
     def getNextPosition(self, xymod):
         currentPosition = np.matrix(self.center)
-
-        #=======================================================================
-        # if xymod[0,0] > -1 and xymod[0,0] < 1:
-        #     self.xybuff[0,0] += xymod[0,0]
-        #     xymod[0,0] = 0
-        # if xymod[0,1] > -1 and xymod[0,1] < 1:
-        #     self.xybuff[0,1] += xymod[0,1]
-        #     xymod[0,1] = 0
-        # if self.xybuff[0,0] < -1 or self.xybuff[0,0] > 1:
-        #     xymod[0,0] += self.xybuff[0,0]
-        #     self.xybuff[0,0] = 0
-        # if self.xybuff[0,1] < -1 or self.xybuff[0,1] > 1:
-        #     xymod[0,1] += self.xybuff[0,1]
-        #     self.xybuff[0,1] = 0
-        #=======================================================================
-
         self.nextPosition = currentPosition + xymod
 
     def hasHitWall(self):
