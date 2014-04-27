@@ -13,6 +13,7 @@ R_BALL_SIZE = 50		# Ball diameter in mm
 R_PITCH = (R_FIELD[0]+2*(R_WALL_WIDTH+R_TAPE_WIDTH), R_FIELD[1]+2*(R_WALL_WIDTH+R_TAPE_WIDTH))    # X, Y in mm
 
 # Simulation constants
+WORLD_MODEL_UPDATE = 1	# Updated ever 1 frame = 30HZ
 Rdx = 2
 Rdy = 2			# Reducing resolution to fit on screen
 
