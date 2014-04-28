@@ -33,10 +33,18 @@ class AIModule(object):
 		self.WorldModel = WMSubscriber
 
 	def update_info(self):
-
-		self.ball_pos, self.ball_speed, self.ball_angle, self.blue1_pos, \
-		self.blue1_angle, self.blue2_pos, self.blue2_angle, self.red1_pos, \
-		self.red1_angle, self.red2_pos, self.red2_angle = self.WorldModel.request_info()
+		worldModel = self.WorldModel.request_info()[-1]
+		self.ball_pos = worldModel["ball"].center
+		self.ball_speed = worldModel["ball"].speed
+		self.ball_angle = worldModel["ball"].orientation
+		self.blue1_pos = worldModel["blue1"].pos
+		self.blue1_angle = worldModel["blue1"].orientation
+		self.blue2_pos = worldModel["blue2"].pos
+		self.blue2_angle = worldModel["blue2"].orientation
+		self.red1_pos = worldModel["red1"].pos
+		self.red1_angle = worldModel["red1"].orientation
+		self.red2_pos = worldModel["red2"].pos
+		self.red2_angle = worldModel["red2"].orientation
 
 	def state_machine(self):
 		if self.player is 'Attacker':

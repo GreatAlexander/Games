@@ -1,4 +1,5 @@
 import pygame
+from copy import copy
 
 class MovingObject(pygame.sprite.Sprite):
     
@@ -21,7 +22,16 @@ class MovingObject(pygame.sprite.Sprite):
     def setFrameCount(self, frameCount):
         self.frameCount = frameCount
     
-    
+    def updateCurrentWorld(self, currentWorld):
+        try:
+            currentWorld[self.name] = copy(self) #may need deepcopy but deepcopy is slow
+        except KeyError:
+            raise MovingObjectHasNoNameError("Object has no name so can not make a key in the world model dictionary for it.")
+        
+
+
+class MovingObjectHasNoNameError(Exception):
+    pass
     
     
     

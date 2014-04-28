@@ -34,6 +34,11 @@ def main():
 	red1 = Agent(RED1_START_POS, 3, RED_START_ANGLE, WM)
 	red2 = Agent(RED2_START_POS, 4, RED_START_ANGLE, WM)
 
+	ball.setName("ball")
+	blue1.setName("blue1")
+	blue2.setName("blue2")
+	red1.setName("red1")
+	red2.setName("red2")
 
 #	ballSprite = pygame.sprite.RenderPlain(ball)
 	ballSprite = pygw.renderplainsprite(ball)
@@ -53,11 +58,10 @@ def main():
 			frame = 0
 		else:
 			frame += 1
-
+		
+		allData = [ball, blue1, blue2, red1, red2]
 		if (frame % WORLD_MODEL_UPDATE) == 0:
-			WM.update_info(ball.center, ball.speed, ball.orientation, \
-			blue1.pos, blue1.angle, blue2.pos, blue2.angle, red1.pos, \
-			red1.angle, red2.pos, red2.angle)
+			WM.update_info(allData)
 
 		#Update Sprites
 		ballSprite.update()
@@ -79,7 +83,6 @@ def main():
 
 #		pygame.display.flip()
 		pygw.updatefulldisplay()
-
 #		for event in pygame.event.get():
 		for event in pygw.getIOevent():
 			if event.type == pygw.QUIT or event.type == pygw.KEYDOWN and event.key == pygw.K_ESCAPE:
