@@ -16,13 +16,21 @@ class WorldModel(object):
 		be used for later analysis or replaying of matches"""
 	def __init__(self):
 		self.world_data = []
+		self.max_length = 9000
 
 	def update_info(self, dataList):
-		currentWorld = {}
-		for item in dataList:
-			item.updateCurrentWorld(currentWorld)
-		
-		self.world_data.append(currentWorld)
+		if(len(self.world_data) < self.max_length):
+			currentWorld = {}
+			for item in dataList:
+				item.updateCurrentWorld(currentWorld)
+			
+			self.world_data.append(currentWorld)
+		else:
+			raise TooMuchWorldDataError("The length of the world model has been exceeded.")
 		
 	def request_info(self):
 		return self.world_data
+	
+
+class TooMuchWorldDataError(Exception):
+	pass
