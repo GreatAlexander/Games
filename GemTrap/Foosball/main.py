@@ -79,7 +79,7 @@ def main():
 		if ball.speed == 0:
 			ball.setPushValue(1)
 			ball.setPushOrientation(np.random.randint(0, 360))
-			ball.setPushSpeed(15)
+			ball.setPushSpeed(5)
 
 #		pygame.display.flip()
 		pygw.updatefulldisplay()

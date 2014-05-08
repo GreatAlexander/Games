@@ -26,8 +26,8 @@ class Display(object):
 		line1box = pygame.Rect(PITCH[0]*1/4-LINE_WIDTH/2, WALL_WIDTH, LINE_WIDTH, PITCH[1]-2*WALL_WIDTH)
 		line2box = pygame.Rect(PITCH[0]*2/4-LINE_WIDTH/2, WALL_WIDTH, LINE_WIDTH, PITCH[1]-2*WALL_WIDTH)
 		line3box = pygame.Rect(PITCH[0]*3/4-LINE_WIDTH/2, WALL_WIDTH, LINE_WIDTH, PITCH[1]-2*WALL_WIDTH)
-		goalyellow=pygame.Rect(WALL_WIDTH/2, PITCH[1]/2 - GOAL_WIDTH/2, Goaldepth, GOAL_WIDTH)
-		goalblue=pygame.Rect(PITCH[0] - WALL_WIDTH, PITCH[1]/2 - GOAL_WIDTH/2, Goaldepth, GOAL_WIDTH)
+		goalyellow=pygame.Rect(WALL_WIDTH/2, PITCH[1]/2 - GOAL_WIDTH/2, GOAL_DEPTH, GOAL_WIDTH)
+		goalblue=pygame.Rect(PITCH[0] - WALL_WIDTH, PITCH[1]/2 - GOAL_WIDTH/2, GOAL_DEPTH, GOAL_WIDTH)
 
 		pygame.draw.rect(background, TAPE, outlinebox, 0)
 		pygame.draw.rect(background, GRASS, pitchbox, 0)
@@ -60,11 +60,11 @@ class Display(object):
 
 	def updateFeaturesOnScreen(self, frame, ball, blue1, blue2, red1, red2):
 		self.showFeatureOnScreen('Ball Speed', 5, np.around(ball.speed, 2))
-		self.showFeatureOnScreen('Ball Angle', 20, np.around(ball.orientation, 2))
-		self.showFeatureOnScreen('Blue1', 35, np.around(blue1.pos, 2))
-		self.showFeatureOnScreen('Blue2', 50, np.around(blue2.pos, 2))
-		self.showFeatureOnScreen('Red1', 65, np.around(red1.pos, 2))
-		self.showFeatureOnScreen('Red2', 80, np.around(red2.pos, 2))
+		self.showFeatureOnScreen('Blue1', 20, blue1.AI.state)
+		self.showFeatureOnScreen('Ori', 30, np.around(blue1.orientation))
+		self.showFeatureOnScreen('Rel', 40, np.around(blue1.AI.angle_to_target_relative, 2))
+		self.showFeatureOnScreen('Ball', 50, np.around(blue1.AI.ball_pos[0], 2))
+		self.showFeatureOnScreen('Right', 60, np.around(blue1.AI.right_side, 2))
 
 
 	def drawEverything(self, background, ballSprite, agent1Sprite, agent2Sprite, agent3Sprite, agent4Sprite):
