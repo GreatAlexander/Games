@@ -52,13 +52,13 @@ def main():
 
 	# Main game loop
 	while going:
-		clock.tick(60)
+		clock.tick(FPS)
 
 		if frame >= 30:
 			frame = 0
 		else:
 			frame += 1
-		
+
 		allData = [ball, blue1, blue2, red1, red2]
 		if (frame % WORLD_MODEL_UPDATE) == 0:
 			WM.update_info(allData)
@@ -74,12 +74,26 @@ def main():
 		display.drawEverything(background, ballSprite, blue1Sprite, blue2Sprite, red1Sprite, red2Sprite)
 		display.updateFeaturesOnScreen(frame, ball, blue1, blue2, red1, red2)
 
+		#Check for kicks
 		ball.setPushValue(0)
-
-		if ball.speed == 0:
+		if blue1.kicking or blue2.kicking or red1.kicking or red2.kicking:
 			ball.setPushValue(1)
-			ball.setPushOrientation(np.random.randint(0, 360))
 			ball.setPushSpeed(5)
+		if blue1.kicking:
+			ball.setPushOrientation(blue1.angle)
+		elif blue2.kicking:
+			ball.setPushOrientation(blue2.angle)
+		elif red1.kicking:
+			ball.setPushOrientation(red1.angle)
+		elif red2.kicking:
+			ball.setPushOrientation(red2.angle)
+#
+#		ball.setPushValue(0)
+#
+#		if ball.speed == 0:
+#			ball.setPushValue(1)
+#			ball.setPushOrientation(np.random.randint(0, 360))
+#			ball.setPushSpeed(5)
 
 #		pygame.display.flip()
 		pygw.updatefulldisplay()
