@@ -7,6 +7,7 @@ Created on Sun Apr 27 16:43:52 2014
 
 from Global import *
 import numpy as np
+import warnings
 
 class WorldModel(object):
 	""" World Model containing all of the up to date information relevant to
@@ -26,11 +27,7 @@ class WorldModel(object):
 
 			self.world_data.append(currentWorld)
 		else:
-			raise TooMuchWorldDataError("The length of the world model has been exceeded.")
+			warnings.warn("The length of the world model has been exceeded. No longer writing log data.")
 
 	def request_info(self):
 		return self.world_data
-
-
-class TooMuchWorldDataError(Exception):
-	pass
