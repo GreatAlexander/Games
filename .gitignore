@@ -215,3 +215,5 @@ pip-log.txt
 .mr.developer.cfg
 *.spyderproject
 *.spyderworkspace
+GemTrap/.spyderworkspace
+GemTrap/Foosball/.spyderproject
